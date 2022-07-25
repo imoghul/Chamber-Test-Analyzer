@@ -1,7 +1,10 @@
 # from numpy import mean
-import copy,csv
+import copy
+import csv
 from fileinput import filename
 from tqdm import tqdm
+import math
+
 
 def ordinal(n):
     return "%d%s" % (n, "tsnrhtdd"[(n // 10 % 10 != 1) * (n % 10 < 4) * n % 10:: 4])
@@ -66,92 +69,10 @@ def process_bar(process, current, total, message="", bar_length=25, bar_pos=40 *
     )
 
 
-def parseSUMfileName(fileName):
-    data = {}
-    _date = fileName.split("_")[-3]
-    data["Date"] = _date[4:6] + "/" + _date[6:8] + "/" + _date[0:4]
-    return data
-
-
-def getFileType(fileName):
-    if "_SUM" in fileName:
-        return "FT2 SUM"
-    elif "_RAW" in fileName:
-        return "FT2 RAW"
-    elif "FT3_" in fileName or "ft3_" in fileName:
-        return "FT3"
-    else:
-        # return "FT1"
-        with open(fileName, newline="") as file:
-                for row in csv.reader(file, delimiter="\n", quotechar=","):
-                    for r in row:
-                        v = r.split(",")
-                        if(v[0]=="Model ID"): return "FT1" 
-                        else: return None   
-
 def moveToBeginning(l, elem):
     if elem not in l:
         return
     l.insert(0, l.pop(l.index(elem)))
-
-
-def getFT2SUMTitle_noCH(d):
-    try:
-        return ((d["region"] + ":") if "region" in d else "") + (
-            ("_".join(d["title"]) if type(d["title"]) == list else d["title"])
-        )
-    except:
-        raise Exception(
-            'One or more entries in FT2 SUM don\'t contain the necessary "title" field'
-        )
-
-
-def getFT2SUMTitle_config(d):
-    return getFT2SUMTitle_noCH(d) if "column header" not in d else d["column header"]
-
-
-def getFT3Title_config(d):
-    try:
-        return d["title"] if "column header" not in d else d["column header"]
-    except:
-        raise Exception(
-            'One or more entries in FT3 don\'t contain the necessary "title" field'
-        )
-
-
-def getFT1Title_config(d):
-    try:
-        return (
-            (((d["step"] + ":") if "step" in d else "") + d["title"])
-            if "column header" not in d
-            else d["column header"]
-        )
-    except:
-        raise Exception(
-            'One or more entries in FT1 don\'t contain the necessary "title" field'
-        )
-
-
-def getTitle_config(d):
-    try:
-        res = None
-        if "column header" in d:
-            return d["column header"]
-        elif d["test"] == "FT2 SUM":
-            res = getFT2SUMTitle_config(d)
-        elif d["test"] == "FT3":
-            res = getFT3Title_config(d)
-        elif d["test"] == "FT1":
-            res = getFT1Title_config(d)
-
-        return d["test"] + ":" + res
-    except Exception as e:
-        raise e
-        return None
-
-
-# def getFT2SUMTitle_raw(title, columnheader=None, region=None):
-#     return (((region+":") if region != None else "")+(("_".join(title) if type(title) == list else title)))if columnheader == None else "column header"
 
 
 def anyIn(val, l):  # checks if any of the elements of l are in val
@@ -164,28 +85,6 @@ def allIn(val, l):
 
 def allInSome(targets, finds):
     return True in [allIn(i, finds) for i in targets]
-
-
-def getFromData(data, title):  # takes data[sn]
-    vals = []
-    for i in data:
-        if title in data:
-            vals.append(data[title])
-    return vals if vals != [] else None
-
-
-def addToData(data, title, val, sn):
-    added = False
-    for i in data:
-        if title not in i:
-            i[title] = val
-            added = True
-            break
-    if not added:
-        if title == "Serial Number":
-            data.append({"Serial Number": sn})
-        else:
-            data.append({"Serial Number": sn, title: val})
 
 
 def runThreads(threads, max, message):
@@ -219,3 +118,50 @@ def runThreads(threads, max, message):
 
     for t in dead + processing:
         t.join()
+
+
+class Time():
+    def __init__(self, hour, minute, second, pos=True):
+        self.hour = hour
+        self.minute = minute
+        self.second = second
+        self.pos = pos
+    def __init__(self,s):
+        data = s.split(" ")
+        self.pos = data[0]=="+"
+        time = data[1].split(":")
+        self.hour = int(time[0])
+        self.minute = int(time[1])
+        self.second = int(time[2])
+
+
+
+    def __add__(self, other):
+        return self.secToObj(other.toSec() + self.toSec())
+
+    def __sub__(self, other):
+        self.__add__(other.__neg__())
+
+    def __neg__(self):
+        return Time(self.hour, self.minute, self.second, not self.pos)
+
+    def __str__(self):
+        return f'{"+" if self.pos else "-"} {"0" if self.hour<10 else ""}{self.hour}:{"0" if self.minute<10 else ""}{self.minute}:{"0" if self.second<10 else ""}{self.second}'
+
+    def __ge__(self, other):
+        return self.toSec() >= other.toSec()
+
+    def __abs__(self):
+        return Time(self.hour, self.minute, self.second)
+
+    def toSec(self):
+        return (self.second + self.minute * 60 +
+                self.hour * 3600) * (1 if self.pos else -1)
+
+    def secToObj(self, secs):
+        pos = secs >= 0
+        secs = abs(secs)
+        h = math.floor(secs / 3600)
+        m = math.floor((secs - h * 3600) / 60)
+        s = (secs - h * 3600 - m * 60)
+        return Time(abs(h), abs(m), abs(s), pos=pos)

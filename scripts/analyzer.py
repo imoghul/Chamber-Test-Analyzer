@@ -29,33 +29,53 @@ dirNum = 0
 
 
 def calc(fileName, dud):
-    global data, headers, logger
+    global data, logger
     try:
         pass
         with open(fileName, newline="") as file:
             if(fileName not in data):
                 data[fileName] = {}
+            header = None
+            skip = True
+            rowNum = 0
             for row in csv.reader(file, delimiter="\n", quotechar=","):
                 for r in row:
                     v = r.split(",")
-                    
-                    
+                    rowNum += 1
+                    if(data[fileName] == {}):
+                        header = v
+                        for i in header:
+                            data[fileName][i] = []
+                        continue
+                    if(header != None and skip):
+                        skip = False
+                        continue
+                    if(len(v) == len(header)):
+                        for index, val in enumerate(v):
+                            if(header[index] == "TESTTIME"):
+                                val = str(Time("+ "+val))
+                            elif(val.isnumeric()):
+                                val = float(val)
+                            data[fileName][header[index]].append(val)
+                    else:
+                        logger.error(
+                            Exception("headers and data values don't match on row %d" % rowNum))
 
     except csv.Error as e:
         pass
     except Exception as e:
-        logger.error(Exception(
-            fileName
-            + " couldn't be read with the following error:\n\n\t"
-            + str(e)
-            + "\n\n"
-        ))
-
-        # print(fileName + " couldn't be read with the following error: "+str(e))
+        # logger.error(Exception(
+        #     fileName
+        #     + " couldn't be read with the following error:\n\n\t"
+        #     + str(e)
+        #     + "\n\n"
+        # ))
+        raise e
 
 
 def writeHeaderToFile(writer):
-   pass
+    pass
+
 
 def writeDataToFile(writer, dir, fileNames):
     global dirNum, threads
@@ -66,7 +86,8 @@ def writeDataToFile(writer, dir, fileNames):
         "Initializing for the %s directory" % ordinal(dirNum))
 
     for fileName in bar:
-        threads.append(threading.Thread(target=calc, args=(fileName, 0)))
+        # threads.append(threading.Thread(target=calc, args=(fileName, 0)))
+        calc(fileName, 0)
 
 
 def writeSummaryToFile(writer):
@@ -74,7 +95,7 @@ def writeSummaryToFile(writer):
 
     # execute threads
     runThreads(threads, 2000, "Retrieving Data")
-    
+    print(data[list(data.keys())[0]])
 
 
 def transfer(odir, log):
@@ -85,4 +106,3 @@ def transfer(odir, log):
 
 def getOutFileName():
     return outFileName
-

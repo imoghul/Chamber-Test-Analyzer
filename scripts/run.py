@@ -129,7 +129,7 @@ def createFile():
         try:
             writeSummaryToFile(writer)
         except Exception as e:
-            logger.error(e)
+            raise e
 
 
 try:
