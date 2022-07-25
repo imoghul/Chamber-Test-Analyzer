@@ -1,0 +1,17 @@
+{
+    "Test Preferences": [],
+    "Generate Certificates": false,
+    "PDF Certificates": false,
+    "Limit": [
+        {}
+    ],
+    "Avoid": [
+        {}
+    ],
+    "Master Summary File Tests": [
+        "FT1",
+        "FT2 SUM",
+        "FT3"
+    ],
+    "Dates": []
+}
