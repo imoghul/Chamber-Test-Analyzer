@@ -9,7 +9,7 @@ import logging
 from tkinter import filedialog
 from tkinter import *
 import atexit
-from eolt import *
+from analyzer import *
 
 
 def pause():
@@ -22,27 +22,13 @@ atexit.register(pause)
 home = expanduser("~")+"/"
 
 try:
-    with open(home+"configdir.txt") as f:
+    with open(home+"Chamber-Test-Analyzer-configdir.txt") as f:
         configdir = f.read()
 except:
     from saveConfigDir import writeConfigDir
     writeConfigDir()
-    with open(home+"configdir.txt") as f:
+    with open(home+"Chamber-Test-Analyzer-configdir.txt") as f:
         configdir = f.read()
-
-
-# try:
-#     try:
-#         basePath = sys._MEIPASS
-#     except Exception:
-#         basePath = os.path.abspath(".")
-#     bundle_dir = getattr(sys, "_MEIPASS", os.path.abspath(os.path.dirname(__file__)))
-#     configtxt = os.path.join(bundle_dir, "configdir.txt")
-
-#     with open(configtxt, "r") as f:
-#         configdir = f.read()
-# except:
-#     raise Exception("Error reading config directory try re-building")
 
 cli = False
 mode = (
@@ -60,10 +46,7 @@ mode = (
 print()
 dirs = ""
 outdir = ""
-certdir = ""
 
-
-preferencesFile = configdir + "/preferences.json"
 locationFile = configdir + "/locations.json"
 
 if cli and len(sys.argv) < 2:
@@ -74,7 +57,6 @@ if mode == "d":
         with open(locationFile) as file:
             data = json.load(file)
         outdir = data["out_dir"]
-        certdir = data["certificate_dir"]
         dirs = data["search_dirs"]
         if type(dirs) != list:
             dirs = [dirs]
@@ -93,7 +75,6 @@ elif mode == "i":
         with open(locationFile) as file:
             data = json.load(file)
         _outdir = data["out_dir"]
-        _certdir = data["certificate_dir"]
         _dirs = data["search_dirs"]
         if type(_dirs) != list:
             _dirs = [_dirs]
@@ -103,13 +84,11 @@ elif mode == "i":
         )
     if outdir == "/":
         outdir = _outdir
-    if certdir == "/":
-        certdir = _certdir
 
 logging.basicConfig(filename=outdir+"/errors.log", level=logging.DEBUG,
                     format='%(asctime)s %(levelname)s %(name)s %(message)s')
 logger = logging.getLogger(__name__)
-transfer(certdir, preferencesFile, outdir, logger)
+transfer(outdir, logger)
 
 
 def createFile():
@@ -149,8 +128,8 @@ def createFile():
                 writer, dir, [f.replace("\\", "/") for f in fileNames])
         try:
             writeSummaryToFile(writer)
-        except:
-            logger.error(Exception("Couldn't write summary file"))
+        except Exception as e:
+            logger.error(e)
 
 
 try:
@@ -164,9 +143,6 @@ except Exception as e:
 lines = {}
 lines["out_dir"] = outdir + \
     ("/" if outdir[-1] != "/" and outdir[-1] != "\\" else "")
-lines["certificate_dir"] = certdir + (
-    "/" if outdir[-1] != "/" and outdir[-1] != "\\" else ""
-)
 lines["search_dirs"] = [
     d + ("/" if d[-1] != "/" and d[-1] != "\\" else "") for d in dirs
 ]
