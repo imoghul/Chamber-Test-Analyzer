@@ -14,6 +14,8 @@ import re
 from tqdm import tqdm
 import dateutil.parser
 import logging
+# import matplotlib.pyplot as plt
+# import numpy as np
 
 outFileName = "summary.csv"
 globType = "**/*.csv"
@@ -42,20 +44,25 @@ def calc(fileName, dud):
                 for r in row:
                     v = r.split(",")
                     rowNum += 1
-                    if(data[fileName] == {}):
+                    if(data[fileName] == {} and not skip):
                         header = v
                         for i in header:
                             data[fileName][i] = []
                         continue
-                    if(header != None and skip):
+                    if(skip):
                         skip = False
                         continue
                     if(len(v) == len(header)):
                         for index, val in enumerate(v):
-                            if(header[index] == "TESTTIME"):
-                                val = str(Time("+ "+val))
-                            elif(val.isnumeric()):
+                            try:
+                                if(header[index] == "Test Time"):
+                                    val = Time("+ "+val)
+                            except:
+                                pass
+                            try:
                                 val = float(val)
+                            except:
+                                pass
                             data[fileName][header[index]].append(val)
                     else:
                         logger.error(
@@ -64,13 +71,13 @@ def calc(fileName, dud):
     except csv.Error as e:
         pass
     except Exception as e:
-        # logger.error(Exception(
-        #     fileName
-        #     + " couldn't be read with the following error:\n\n\t"
-        #     + str(e)
-        #     + "\n\n"
-        # ))
-        raise e
+        logger.error(Exception(
+            fileName
+            + " couldn't be read with the following error:\n\n\t"
+            + str(e)
+            + "\n\n"
+        ))
+        # raise e
 
 
 def writeHeaderToFile(writer):
@@ -87,19 +94,45 @@ def writeDataToFile(writer, dir, fileNames):
 
     for fileName in bar:
         # threads.append(threading.Thread(target=calc, args=(fileName, 0)))
-        calc(fileName, 0)
+        if(calc(fileName, 0) == 0):
+            if "P Temp chamber" in data[fileName] and -999 not in data[fileName]["P Temp chamber"]:
+                print(data[fileName]["P Temp chamber"])
+                return
 
 
 def writeSummaryToFile(writer):
     global data, threads, headers
 
     # execute threads
-    runThreads(threads, 2000, "Retrieving Data")
-    print(data[list(data.keys())[0]])
+    runThreads(threads, 10, "Retrieving Data")
+    # print(data[list(data.keys())[0]])
+    bar = tqdm(data)
+    for fn in bar:
+        interest = data[fn]
+        # if("P Temp chamber" not in interest):
+        #     continue
+        # if(-999 in interest["P Temp chamber"]): continue
+
+        t = [str(i) for i in interest["Test Time"]]
+        at1 = interest["Ambients"]
+        watts = interest["Watt"]
+        phps = interest["PHPs"]
+
+        # plt.plot(t,at1,"r")
+        # plt.plot(t,watts,"g")
+        # plt.show()
+        writer.writerow(["Time:"]+t)
+        writer.writerow(["Ambients"]+at1)
+        writer.writerow(["Watts:"]+watts)
+        writer.writerow(["PHPs:"]+phps)
+        writer.writerow(["P Temp chamber "]+interest["P Temp chamber"])
+        # print(data[fn])
+        print(fn)
+        break
 
 
 def transfer(odir, log):
-    global certdir, preferencesFile, detectionList, retrieveData, genCert, outdir, logger, outFileName
+    global outdir, logger, outFileName
     logger = log
     outdir = odir
 
