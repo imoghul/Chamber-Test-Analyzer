@@ -150,6 +150,12 @@ class Time():
 
     def __ge__(self, other):
         return self.toSec() >= other.toSec()
+    
+    def __gt__(self, other):
+        return self.toSec() > other.toSec()
+
+    def __eq__(self,other):
+        return self.hour == other.hour and self.minute == other.minute and self.second == other.second
 
     def __abs__(self):
         return Time(self.hour, self.minute, self.second)
