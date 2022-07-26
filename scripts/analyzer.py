@@ -20,9 +20,8 @@ import logging
 
 outFileName = "summary.csv"
 globType = "**/*.csv"
-data = {}
+# data = {}
 outdir = ""
-dataFile = None
 logger = logging.getLogger(__name__)
 
 headers = []
@@ -31,24 +30,22 @@ dirNum = 0
 
 
 def calc(fileName, dud):
-    global data,logger
+    global logger
     try:
         pass
         with open(fileName, newline="") as file:
-            # data = get_json()
-            if(fileName not in data):
-                data[fileName] = {}
+            data = {}
             header = None
             skip = True
             rowNum = 0
-            for row in csv.reader(file, delimiter="\n", quotechar=","):
+            for row in tqdm(list(csv.reader(file, delimiter="\n", quotechar=",")),leave=False,desc="Row Number"):
                 for r in row:
                     v = r.split(",")
                     rowNum += 1
-                    if(data[fileName] == {} and not skip):
+                    if(data == {} and not skip):
                         header = v
                         for i in header:
-                            data[fileName][i] = []
+                            data[i] = []
                         continue
                     if(skip):
                         skip = False
@@ -57,27 +54,29 @@ def calc(fileName, dud):
                         for index, val in enumerate(v):
                             try:
                                 if(header[index] == "Test Time"):
-                                    val = str(Time("+ "+val))
+                                    val = Time("+ "+val).toSec()
                             except:
                                 pass
                             try:
                                 val = float(val)
                             except:
                                 pass
-                            data[fileName][header[index]].append(val)
+                            data[header[index]].append(val)
                     else:
                         logger.error(
                             Exception("headers and data values don't match on row %d" % rowNum))
-            
+            # write_json(fileName,data,outdir+"data.json")
+            return data
     except csv.Error as e:
         pass
     except Exception as e:
-        logger.error(Exception(
-            fileName
-            + " couldn't be read with the following error:\n\n\t"
-            + str(e)
-            + "\n\n"
-        ))
+        raise e
+        # logger.error(Exception(
+        #     fileName
+        #     + " couldn't be read with the following error:\n\n\t"
+        #     + str(e)
+        #     + "\n\n"
+        # ))
 
 
 def writeHeaderToFile(writer):
@@ -93,21 +92,20 @@ def writeDataToFile(writer, dir, fileNames):
         "Initializing for the %s directory" % ordinal(dirNum))
     c = 0
     for fileName in bar:
-        # threads.append(threading.Thread(target=calc, args=(fileName, 0)))
-        calc(fileName,0)
-        c+=1
-        if "P Temp chamber" in data[fileName] and -999 not in data[fileName]["P Temp chamber"]:
+        data = calc(fileName,0)
+        if "P Temp chamber" in data and -999 not in data["P Temp chamber"]:
+            write_json(fileName,data,outdir+"data.json")
             c+=1
+            print(c)
         if c>=10:
             return
 
 
 def writeSummaryToFile(writer):
-    global data, threads, headers
-    json.dump(data, dataFile, indent=4)
-    # execute threads
-    # runThreads(threads, 10, "Retrieving Data")
-    # print(data[list(data.keys())[0]])
+    global threads, headers
+    data = get_json(outdir+"data.json")
+    # print(data[list(
+    # data.keys())[0]])
     bar = tqdm(data)
     for fn in bar:
         interest = data[fn]
@@ -120,31 +118,24 @@ def writeSummaryToFile(writer):
         watts = interest["Watt"]
         phps = interest["PHPs"]
 
-        # plt.plot(t,at1,"r")
-        # plt.plot(t,watts,"g")
-        # plt.show()
         writer.writerow(["FileName",fn])
         writer.writerow(["Time:"]+t)
         writer.writerow(["Ambients"]+at1)
         writer.writerow(["Watts:"]+watts)
         writer.writerow(["PHPs:"]+phps)
-        if("P Temp chamber " in interest):writer.writerow(["P Temp chamber "]+interest["P Temp chamber"])
+        if("P Temp chamber" in interest):writer.writerow(["P Temp chamber"]+interest["P Temp chamber"])
         writer.writerow([""])
-        print(data[fn])
+        # print(data[fn])
         print(fn)
         # if(i>100):break'
-    dataFile.close()
 
 
 def transfer(odir, log):
-    global dataFile, outdir, logger, outFileName
+    global outdir, logger, outFileName
     logger = log
     outdir = odir
-    dataFile = open(outdir+"data.json","w")
-    json.dump({}, dataFile, indent=4)
-    dataFile.close()
-
-    dataFile = open(outdir+"data.json","w")
+    with open(outdir+"data.json","w") as dataFile:
+        json.dump({}, dataFile, indent=4)
 
 
 def getOutFileName():
@@ -154,18 +145,23 @@ def getOutFileName():
 
 # function to add to JSON
 def write_json(key,new_data, filename=outdir+'data.json'):
-
-    with open(filename,'r+') as file:
-          # First we load existing data into a dict.
-        file_data = json.load(file)
-        # Join new_data with file_data inside emp_details
-        file_data[key].append(new_data)
-        # Sets file's current position at offset.
-        file.seek(0)
-        # convert back to json.
-        json.dump(file_data, file, indent = 4)
+    try:
+        with open(filename,'r+') as file:
+            # First we load existing data into a dict.
+            file_data = json.load(file)
+            # Join new_data with file_data inside emp_details
+            
+            # if(key not in file_data):file_data[key] = new_data
+            # else:file_data[key].append(new_data)
+            file_data[key] = new_data
+            
+            # Sets file's current position at offset.
+            file.seek(0)
+            # convert back to json.
+            json.dump(file_data, file, indent = 4)
  
-    # python object to be appended
+    except PermissionError:
+        write_json(key,new_data,filename)
 
 def get_json(filename = outdir+'data.json'):
     with open(filename,'r') as file:
