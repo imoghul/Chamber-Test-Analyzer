@@ -41,23 +41,23 @@ def analyze():
         print(fn)
         bpoints = len(t)//10
         plt.figure()
+        
         plt.subplot(221)
         plt.plot(t,ptemp,"r")
+        
         plt.subplot(222)
-        smoov = smooth(ptemp,bpoints)
-        smoov = smooth(smoov,bpoints)
-
-        # smoovdt = smooth(dt(t,ptemp),50)
-        dtsmoov = dt(t,smoov)
-        smooovdtsmoov = smooth(dt(t,smoov),bpoints)
+        smoov = getSmooth(ptemp)
+        print(smoov)
         plt.plot(t,smoov,"brown")
-        plt.plot(t[bpoints:-bpoints],smoov[bpoints:-bpoints],"b")
+        
         plt.subplot(223)
-        # plt.plot(t[50:-50],smoovdt[50:-50],"g")
-        plt.plot(t,smooovdtsmoov,"blue")
-        plt.plot(t[bpoints**1:-(bpoints**1)],smooovdtsmoov[bpoints**1:-(bpoints**1)],"g")
+        dxdt = dt(t,smoov)
+        plt.plot(t,dxdt,"g")
+        
         plt.subplot(224)
-        plt.plot(t[bpoints:-bpoints],dtsmoov[bpoints:-bpoints],"orange")
+        smoovdxdt = getSmooth(dxdt)
+        plt.plot(t,smoovdxdt,"orange")
+
         plt.show()
         # print(data[fn])
         
