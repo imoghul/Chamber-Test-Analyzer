@@ -125,9 +125,6 @@ def writeSummaryToFile(writer):
         writer.writerow(["PHPs:"]+phps)
         if("P Temp chamber" in interest):writer.writerow(["P Temp chamber"]+interest["P Temp chamber"])
         writer.writerow([""])
-        # print(data[fn])
-        print(fn)
-        # if(i>100):break'
 
 
 def transfer(odir, log):

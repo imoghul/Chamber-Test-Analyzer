@@ -4,7 +4,6 @@ def dt(time,data):
     res = []
     for i,v in enumerate(data):
         if i == 0:
-            res.append(0)
             continue
         res.append((v-data[i-1])/(float(time[i])-float(time[i-1])))
     return res
@@ -22,8 +21,6 @@ def smooth(arr,span):
     back.insert(0, np.average(arr[-2 * span:]))
     return np.concatenate((front, moving_average, back))
 
-# def getCutoff(y,iterations,bpoints):
-
 def getSpan(y):
     return 5
 
@@ -33,3 +30,11 @@ def getSmooth(y,iterations = 30,span = None):
     for i in range(iterations-1):
         smoov = smooth(smoov,span)
     return smoov
+
+
+def getPeaks(t,data):
+    res = []
+    diff = dt(t,data)
+    for i,v in enumerate(diff):
+        if(v==0 or (i!=0 and v*diff[i-1]<0)):  res.append(i)
+    return res

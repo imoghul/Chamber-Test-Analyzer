@@ -38,26 +38,40 @@ def analyze():
         # ptemp = 10000*[ptemp[0]] + ptemp + 10000*[ptemp[-1]]
         # t = 10000*[t[0]] + t + 10000*[t[-1]]
         # print(ptemp)
-        print(fn)
-        bpoints = len(t)//10
+        # print(fn)
+        origPtemp = ptemp.copy()
+        ptemp = getSmooth(ptemp)
+        dptempdt = getSmooth(dt(t,ptemp))
+        origWatts = watts.copy()
+        watts = getSmooth(watts)
+        dwattsdt = getSmooth(dt(t,watts))
+        
+        ptempPeaks = getPeaks(t,ptemp)
+        wattsPeaks = getPeaks(t,watts)
+
         plt.figure()
         
         plt.subplot(221)
+        plt.plot(t,origPtemp,"lightcoral")
         plt.plot(t,ptemp,"r")
+        plt.plot([t[i] for i in ptempPeaks],[ptemp[i] for i in ptempPeaks],"o")
         
+        plt.title("ptemp")
+
         plt.subplot(222)
-        smoov = getSmooth(ptemp)
-        print(smoov)
-        plt.plot(t,smoov,"brown")
+        plt.plot(t,origWatts,"paleturquoise")
+        plt.plot(t,watts,"b")
+        plt.plot([t[i] for i in wattsPeaks],[watts[i] for i in wattsPeaks],"o")
+        plt.title("watts")
         
         plt.subplot(223)
-        dxdt = dt(t,smoov)
-        plt.plot(t,dxdt,"g")
+        plt.plot(t[1:],dptempdt,"g")
+        plt.title("dptemp/dt")
         
         plt.subplot(224)
-        smoovdxdt = getSmooth(dxdt)
-        plt.plot(t,smoovdxdt,"orange")
-
+        plt.plot(t[1:],dwattsdt,"brown")
+        plt.title("dwatts/dt")
+        
         plt.show()
         # print(data[fn])
         
