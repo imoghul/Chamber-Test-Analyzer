@@ -14,6 +14,7 @@ import re
 from tqdm import tqdm
 import dateutil.parser
 import logging
+import random
 import matplotlib.pyplot as plt
 import numpy as np
 from analysis_utils import *
@@ -27,7 +28,9 @@ def analyze():
     # data.keys())[0]])
     with open("C:/Users/Ibrahim.Moghul/Desktop/Data Analysis Scripts/OUTPUT/Chambers/test.csv", 'w') as out:
         writer = csv.writer(out)
-        bar = tqdm(data)
+        dataKeys = list(data.keys())
+        random.shuffle(dataKeys)
+        bar = tqdm(dataKeys)
         for fn in bar:
             interest = data[fn]
 
@@ -37,15 +40,15 @@ def analyze():
             for i, v in enumerate(wattHrs):
                 wattHrs[i] = (v*t[i])//3600
 
-            origwattHrs = wattHrs.copy()
-            wattHrs = getSmooth(t, wattHrs)
-            dwattHrsdt = getSmooth(t, dt(t, wattHrs))
+            # origwattHrs = wattHrs.copy()
+            # wattHrs = getSmooth(t, wattHrs)
+            # dwattHrsdt = getSmooth(t, dt(t, wattHrs))
 
             origWatts = watts.copy()
             watts = getSmooth(t, watts)
             dwattsdt = getSmooth(t, dt(t, watts))
 
-            wattHrsPeaks = getPeaks(t, wattHrs)
+            # wattHrsPeaks = getPeaks(t, wattHrs)
             wattsPeaks = getPeaks(t, watts)
 
             writer.writerow(["Time (s): "]+t)
@@ -53,29 +56,35 @@ def analyze():
             writer.writerow(["Watts: "]+[str(i) for i in watts])
             writer.writerow(
                 ["Watts Peaks:"]+['1' if i in wattsPeaks else '' for i, _ in enumerate(watts)])
+            writer.writerow(["dwatts/dt",""]+[str(i) for i in dt(t, watts)])
 
             plt.figure()
 
-            plt.subplot(221)
-            plt.plot(t, origwattHrs, "lightcoral")
-            plt.plot(t, wattHrs, "r")
-            plt.plot([t[i] for i in wattHrsPeaks], [wattHrs[i]
-                     for i in wattHrsPeaks], "o")
-            plt.title("wattHrs")
+            # plt.subplot(221)
+            # plt.plot(t, origwattHrs, "lightcoral")
+            # plt.plot(t, wattHrs, "r")
+            # plt.plot([t[i] for i in wattHrsPeaks], [wattHrs[i]
+            #          for i in wattHrsPeaks], "o")
+            # plt.title("wattHrs")
 
-            plt.subplot(222)
+            plt.subplot(211)
             plt.plot(t, origWatts, "paleturquoise")
-            plt.plot(t, watts, "b")
-            plt.plot([t[i] for i in wattsPeaks], [watts[i]
-                     for i in wattsPeaks], "o")
+            # plt.plot(t, origWatts, "o")
+
+            plt.plot(t,smoothNoiseChunks(t,origWatts),"black")
+            for i in getNoiseChunks(t,origWatts):
+                plt.plot( t[i[0]:i[1]] ,origWatts[i[0]:i[1]],"b")
+            # plt.plot(t, watts, "b")
+            # plt.plot([t[i] for i in wattsPeaks], [watts[i]
+            #          for i in wattsPeaks], "o")
             plt.title("watts")
             writer.writerow(["-"*len(t)])
 
-            plt.subplot(223)
-            plt.plot(t[1:], dwattHrsdt, "g")
-            plt.title("dwattHrs/dt")
+            # plt.subplot(223)
+            # plt.plot(t[1:], dwattHrsdt, "g")
+            # plt.title("dwattHrs/dt")
 
-            plt.subplot(224)
+            plt.subplot(212)
             plt.plot(t[1:], dwattsdt, "brown")
             plt.title("dwatts/dt")
 

@@ -89,7 +89,7 @@ def writeDataToFile(writer, dir, fileNames):
 
     bar = tqdm(fileNames)
     bar.set_description(
-        "Initializing for the %s directory" % ordinal(dirNum))
+        "Retrieving from the %s directory" % ordinal(dirNum))
     c = 0
     for fileName in bar:
         data = calc(fileName, 0)
@@ -97,7 +97,7 @@ def writeDataToFile(writer, dir, fileNames):
         if True:
             write_json(fileName, data, outdir+"data.json")
             c += 1
-        if c >= 10:
+        if c >= 100:
             return
 
 

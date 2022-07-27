@@ -1,7 +1,8 @@
 import enum
 import numpy as np
 import statistics
-
+import statsmodels.api as sm
+import scipy
 
 def dt(time, data):
     res = []
@@ -25,30 +26,34 @@ def smooth(arr, span):
         back.insert(0, np.average(arr[-i - span:]))
     back.insert(0, np.average(arr[-2 * span:]))
     return np.concatenate((front, moving_average, back))
+    # return scipy.signal.savgol_filter(arr, span * 2 + 1, 0)
 
 
 def getSpan(t, y):
     span = len(getPeaks(t, y))//50
     if(span < 5):
         span = 5
-    return span
+    return 2#span
 
+def getIterations(t,y):
+    try:
+        # len(getPeaks(t,y))//100
+        iterations = round(5/statistics.stdev(y))
+    except:
+        iterations = 0
+
+    # iterations*=50
+    if(iterations < 5):
+        iterations = 5
+    if(iterations > 5000):
+        iterations = 5000
+    return iterations
 
 def getSmooth(t, y, iterations=None, span=None):
     if(iterations == None):
-        try:
-            # len(getPeaks(t,y))//100
-            iterations = round(5/statistics.stdev(y))
-        except:
-            iterations = 0
-        if(iterations < 5):
-            iterations = 5
-        if(iterations > 5000):
-            iterations = 5000
-        print("iterations: "+str(iterations))
+        iterations = getIterations(t,y)
     if(span == None):
         span = getSpan(t, y)
-    print("span: "+str(span))
     smoov = smooth(y, span)
     for i in range(iterations-1):
         smoov = smooth(smoov, span)
@@ -64,9 +69,44 @@ def getPeaks(t, data):
 
     # clean up bouncing
     bounces = []
-    for i, v in enumerate(res):
-        if(i != 0 and v == res[i-1]+1):
+    for i, v in enumerate(res[1:]):
+        if(v == res[i-1]+1):
             bounces.append(v)
     for i in bounces:
         res.remove(i)
     return res
+
+
+def getNoiseChunks(t,y,margin = 2): # returns [[a,b],[c,d],[e,f]...]
+    marginChunks = []
+    peaks = getPeaks(t,y)
+    temp = []
+    currChunk = []
+    for i,v in enumerate(y):
+        currChunk.append(v)
+        if(all([abs(j-v)<=margin for j in currChunk[0:-1]])):#(i!=0 and abs(v-y[i-1])<=margin)
+            if temp==[]:temp.append(i)
+            else: 
+                if(len(temp)==1):temp.append(0)
+                temp[1]=i
+        elif len(temp)>1:
+            # print (t[temp[0]:temp[1]])
+            if((temp[1]-temp[0])!=0):marginChunks.append(temp.copy())
+            temp = []
+            currChunk = []
+        else:
+            currChunk = []
+            temp = []
+        
+    
+    
+
+    return marginChunks
+def smoothNoiseChunks(t,y):
+    y = y.copy()
+    for chunk in getNoiseChunks(t,y,5):
+        smoothed = getSmooth(t[chunk[0]:chunk[1]],y[chunk[0]:chunk[1]])
+        print(getSpan(t,y),len(smoothed),chunk[1]-chunk[0])
+        if(chunk[1]-chunk[0]<getSpan(t,y)*2):continue
+        y[chunk[0]:chunk[1]] = smoothed
+    return y
