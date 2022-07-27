@@ -18,60 +18,75 @@ import matplotlib.pyplot as plt
 import numpy as np
 from analysis_utils import *
 
+
 def analyze():
     global threads, headers
-    data = get_json("C:/Users/Ibrahim.Moghul/Desktop/Data Analysis Scripts/OUTPUT/Chambers/data.json")
+    data = get_json(
+        "C:/Users/Ibrahim.Moghul/Desktop/Data Analysis Scripts/OUTPUT/Chambers/data.json")
     # print(data[list(
     # data.keys())[0]])
-    bar = tqdm(data)
-    for fn in bar:
-        interest = data[fn]
+    with open("C:/Users/Ibrahim.Moghul/Desktop/Data Analysis Scripts/OUTPUT/Chambers/test.csv", 'w') as out:
+        writer = csv.writer(out)
+        bar = tqdm(data)
+        for fn in bar:
+            interest = data[fn]
 
-        t = interest["Test Time"]
-        # ptemp = interest["P Temp chamber"]
-        watts = interest["Watt"]
+            t = interest["Test Time"]
+            watts = interest["Watt"]
+            wattHrs = watts.copy()
+            for i, v in enumerate(wattHrs):
+                wattHrs[i] = (v*t[i])//3600
 
+            origwattHrs = wattHrs.copy()
+            wattHrs = getSmooth(t, wattHrs)
+            dwattHrsdt = getSmooth(t, dt(t, wattHrs))
 
-        # origPtemp = ptemp.copy()
-        # ptemp = getSmooth(ptemp)
-        # dptempdt = getSmooth(dt(t,ptemp))
-        origWatts = watts.copy()
-        watts = getSmooth(t,watts)
-        dwattsdt = getSmooth(t,dt(t,watts))
-        
-        # ptempPeaks = getPeaks(t,ptemp)
-        wattsPeaks = getPeaks(t,watts)
+            origWatts = watts.copy()
+            watts = getSmooth(t, watts)
+            dwattsdt = getSmooth(t, dt(t, watts))
 
-        plt.figure()
-        
-        # plt.subplot(221)
-        # plt.plot(t,origPtemp,"lightcoral")
-        # plt.plot(t,ptemp,"r")
-        # plt.plot([t[i] for i in ptempPeaks],[ptemp[i] for i in ptempPeaks],"o")
-        # plt.title("ptemp")
+            wattHrsPeaks = getPeaks(t, wattHrs)
+            wattsPeaks = getPeaks(t, watts)
 
-        plt.subplot(121)
-        plt.plot(t,origWatts,"paleturquoise")
-        plt.plot(t,watts,"b")
-        plt.plot([t[i] for i in wattsPeaks],[watts[i] for i in wattsPeaks],"o")
-        plt.title("watts")
-        
-        # plt.subplot(223)
-        # plt.plot(t[1:],dptempdt,"g")
-        # plt.title("dptemp/dt")
-        
-        plt.subplot(122)
-        plt.plot(t[1:],dwattsdt,"brown")
-        plt.title("dwatts/dt")
-        
-        plt.show()
-        # print(data[fn])
-        
-        # if(i>100):break'
+            writer.writerow(["Time (s): "]+t)
+            writer.writerow(["Original Watts: "] + [str(i) for i in origWatts])
+            writer.writerow(["Watts: "]+[str(i) for i in watts])
+            writer.writerow(
+                ["Watts Peaks:"]+['1' if i in wattsPeaks else '' for i, _ in enumerate(watts)])
+
+            plt.figure()
+
+            plt.subplot(221)
+            plt.plot(t, origwattHrs, "lightcoral")
+            plt.plot(t, wattHrs, "r")
+            plt.plot([t[i] for i in wattHrsPeaks], [wattHrs[i]
+                     for i in wattHrsPeaks], "o")
+            plt.title("wattHrs")
+
+            plt.subplot(222)
+            plt.plot(t, origWatts, "paleturquoise")
+            plt.plot(t, watts, "b")
+            plt.plot([t[i] for i in wattsPeaks], [watts[i]
+                     for i in wattsPeaks], "o")
+            plt.title("watts")
+            writer.writerow(["-"*len(t)])
+
+            plt.subplot(223)
+            plt.plot(t[1:], dwattHrsdt, "g")
+            plt.title("dwattHrs/dt")
+
+            plt.subplot(224)
+            plt.plot(t[1:], dwattsdt, "brown")
+            plt.title("dwatts/dt")
+
+            plt.show()
+            # print(data[fn])
+
+            # if(i>100):break'
 
 
 def get_json(filename):
-    with open(filename,'r') as file:
+    with open(filename, 'r') as file:
         return json.load(file)
 
 

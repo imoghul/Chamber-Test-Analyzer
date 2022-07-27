@@ -93,7 +93,8 @@ def writeDataToFile(writer, dir, fileNames):
     c = 0
     for fileName in bar:
         data = calc(fileName, 0)
-        if True:#"P Temp chamber" in data and -999 not in data["P Temp chamber"] and "P pidPTerm" in data and len(data["P pidPTerm"]) != data["P pidPTerm"].count(-999) and "P pidISum" in data and len(data["P pidISum"]) != data["P pidISum"].count(-999):
+        # "P Temp chamber" in data and -999 not in data["P Temp chamber"] and "P pidPTerm" in data and len(data["P pidPTerm"]) != data["P pidPTerm"].count(-999) and "P pidISum" in data and len(data["P pidISum"]) != data["P pidISum"].count(-999):
+        if True:
             write_json(fileName, data, outdir+"data.json")
             c += 1
         if c >= 10:

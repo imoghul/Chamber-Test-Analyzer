@@ -138,7 +138,7 @@ except (PermissionError):
     logger.error(
         Exception("Output file couldn't be opened. Close the file if it is open"))
 except Exception as e:
-    raise e# logger.error(e)
+    raise e  # logger.error(e)
 
 lines = {}
 lines["out_dir"] = outdir + \
