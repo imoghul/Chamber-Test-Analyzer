@@ -38,7 +38,7 @@ def calc(fileName, dud):
             header = None
             skip = True
             rowNum = 0
-            for row in tqdm(list(csv.reader(file, delimiter="\n", quotechar=",")),leave=False,desc="Row Number"):
+            for row in tqdm(list(csv.reader(file, delimiter="\n", quotechar=",")), leave=False, desc="Row Number"):
                 for r in row:
                     v = r.split(",")
                     rowNum += 1
@@ -92,12 +92,11 @@ def writeDataToFile(writer, dir, fileNames):
         "Initializing for the %s directory" % ordinal(dirNum))
     c = 0
     for fileName in bar:
-        data = calc(fileName,0)
-        if "P Temp chamber" in data and -999 not in data["P Temp chamber"]:
-            write_json(fileName,data,outdir+"data.json")
-            c+=1
-            print(c)
-        if c>=10:
+        data = calc(fileName, 0)
+        if True:#"P Temp chamber" in data and -999 not in data["P Temp chamber"] and "P pidPTerm" in data and len(data["P pidPTerm"]) != data["P pidPTerm"].count(-999) and "P pidISum" in data and len(data["P pidISum"]) != data["P pidISum"].count(-999):
+            write_json(fileName, data, outdir+"data.json")
+            c += 1
+        if c >= 10:
             return
 
 
@@ -109,21 +108,18 @@ def writeSummaryToFile(writer):
     bar = tqdm(data)
     for fn in bar:
         interest = data[fn]
-        if("P Temp chamber" not in interest):
-            continue
-        if(-999 in interest["P Temp chamber"]): continue
 
-        t = [str(i) for i in interest["Test Time"]]
-        at1 = interest["Ambients"]
-        watts = interest["Watt"]
-        phps = interest["PHPs"]
-
-        writer.writerow(["FileName",fn])
-        writer.writerow(["Time:"]+t)
-        writer.writerow(["Ambients"]+at1)
-        writer.writerow(["Watts:"]+watts)
-        writer.writerow(["PHPs:"]+phps)
-        if("P Temp chamber" in interest):writer.writerow(["P Temp chamber"]+interest["P Temp chamber"])
+        writer.writerow(["FileName", fn])
+        writer.writerow(["Time:"]+[str(i) for i in interest["Test Time"]])
+        writer.writerow(["Ambients"]+interest["Ambients"])
+        writer.writerow(["Watts:"]+interest["Watt"])
+        writer.writerow(["PHPs:"]+interest["PHPs"])
+        if("P Temp chamber" in interest):
+            writer.writerow(["P Temp chamber"]+interest["P Temp chamber"])
+        if("P pidPTerm" in interest):
+            writer.writerow(["P pidPTerm"]+interest["P pidPTerm"])
+        if("P pidISum" in interest):
+            writer.writerow(["P pidISum"]+interest["P pidISum"])
         writer.writerow([""])
 
 
@@ -131,7 +127,7 @@ def transfer(odir, log):
     global outdir, logger, outFileName
     logger = log
     outdir = odir
-    with open(outdir+"data.json","w") as dataFile:
+    with open(outdir+"data.json", "w") as dataFile:
         json.dump({}, dataFile, indent=4)
 
 
@@ -139,27 +135,27 @@ def getOutFileName():
     return outFileName
 
 
-
 # function to add to JSON
-def write_json(key,new_data, filename=outdir+'data.json'):
+def write_json(key, new_data, filename=outdir+'data.json'):
     try:
-        with open(filename,'r+') as file:
+        with open(filename, 'r+') as file:
             # First we load existing data into a dict.
             file_data = json.load(file)
             # Join new_data with file_data inside emp_details
-            
+
             # if(key not in file_data):file_data[key] = new_data
             # else:file_data[key].append(new_data)
             file_data[key] = new_data
-            
+
             # Sets file's current position at offset.
             file.seek(0)
             # convert back to json.
-            json.dump(file_data, file, indent = 4)
- 
-    except PermissionError:
-        write_json(key,new_data,filename)
+            json.dump(file_data, file, indent=4)
 
-def get_json(filename = outdir+'data.json'):
-    with open(filename,'r') as file:
+    except PermissionError:
+        write_json(key, new_data, filename)
+
+
+def get_json(filename=outdir+'data.json'):
+    with open(filename, 'r') as file:
         return json.load(file)
