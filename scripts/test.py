@@ -40,58 +40,40 @@ def analyze():
             for i, v in enumerate(wattHrs):
                 wattHrs[i] = (v*t[i])//3600
 
-            # origwattHrs = wattHrs.copy()
-            # wattHrs = getSmooth(t, wattHrs)
-            # dwattHrsdt = getSmooth(t, dt(t, wattHrs))
-
             origWatts = watts.copy()
-            watts = getSmooth(t, watts)
-            dwattsdt = getSmooth(t, dt(t, watts))
-
-            # wattHrsPeaks = getPeaks(t, wattHrs)
-            wattsPeaks = getPeaks(t, watts)
+            watts = smoothNoiseChunks(t, watts)
+            # dwattsdt = getSmooth(t, dt(t, watts))
+            # wattsPeaks = getPeaks(t, watts)
+            if(len(watts)!=len(t)):print("fishy")
 
             writer.writerow(["Time (s): "]+t)
             writer.writerow(["Original Watts: "] + [str(i) for i in origWatts])
             writer.writerow(["Watts: "]+[str(i) for i in watts])
-            writer.writerow(
-                ["Watts Peaks:"]+['1' if i in wattsPeaks else '' for i, _ in enumerate(watts)])
-            writer.writerow(["dwatts/dt",""]+[str(i) for i in dt(t, watts)])
+            # writer.writerow(
+            #     ["Watts Peaks:"]+['1' if i in wattsPeaks else '' for i, _ in enumerate(watts)])
+            # writer.writerow(["dwatts/dt",""]+[str(i) for i in dt(t, watts)])
+            writer.writerow(["-"*len(t)])
+
 
             plt.figure()
 
-            # plt.subplot(221)
-            # plt.plot(t, origwattHrs, "lightcoral")
-            # plt.plot(t, wattHrs, "r")
-            # plt.plot([t[i] for i in wattHrsPeaks], [wattHrs[i]
-            #          for i in wattHrsPeaks], "o")
-            # plt.title("wattHrs")
-
-            plt.subplot(211)
-            plt.plot(t, origWatts, "paleturquoise")
-            # plt.plot(t, origWatts, "o")
-
-            plt.plot(t,smoothNoiseChunks(t,origWatts),"black")
-            for i in getNoiseChunks(t,origWatts):
+            # plt.subplot(211)
+            plt.plot(t, origWatts, "o")#"paleturquoise")
+            plt.plot(t, watts, "black")
+            nchunks = getNoiseChunks(t,origWatts)
+            for i in nchunks:
                 plt.plot( t[i[0]:i[1]] ,origWatts[i[0]:i[1]],"b")
-            # plt.plot(t, watts, "b")
             # plt.plot([t[i] for i in wattsPeaks], [watts[i]
             #          for i in wattsPeaks], "o")
             plt.title("watts")
-            writer.writerow(["-"*len(t)])
+            
 
-            # plt.subplot(223)
-            # plt.plot(t[1:], dwattHrsdt, "g")
-            # plt.title("dwattHrs/dt")
-
-            plt.subplot(212)
-            plt.plot(t[1:], dwattsdt, "brown")
-            plt.title("dwatts/dt")
+            print(nchunks)
+            # plt.subplot(212)
+            # plt.plot(t[1:], dwattsdt, "brown")
+            # plt.title("dwatts/dt")
 
             plt.show()
-            # print(data[fn])
-
-            # if(i>100):break'
 
 
 def get_json(filename):

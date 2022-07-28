@@ -6,9 +6,9 @@ import scipy
 
 def dt(time, data):
     res = []
-    for i, v in enumerate(data):
-        if i == 0:
-            continue
+    if(len(time)!=len(data)):
+        raise Exception("incorrect sizes")
+    for i, v in enumerate(data[1:]):
         res.append((v-data[i-1])/(float(time[i])-float(time[i-1])))
     return res
 
@@ -33,7 +33,7 @@ def getSpan(t, y):
     span = len(getPeaks(t, y))//50
     if(span < 5):
         span = 5
-    return 2#span
+    return span
 
 def getIterations(t,y):
     try:
@@ -54,6 +54,9 @@ def getSmooth(t, y, iterations=None, span=None):
         iterations = getIterations(t,y)
     if(span == None):
         span = getSpan(t, y)
+    if(len(y)<2*span):
+        if(len(y)):return len(y)*[y[0]]
+        else:return y
     smoov = smooth(y, span)
     for i in range(iterations-1):
         smoov = smooth(smoov, span)
@@ -77,36 +80,24 @@ def getPeaks(t, data):
     return res
 
 
-def getNoiseChunks(t,y,margin = 2): # returns [[a,b],[c,d],[e,f]...]
-    marginChunks = []
-    peaks = getPeaks(t,y)
+def getNoiseChunks(t,y,margin = 5): # returns [[a,b],[c,d],[e,f]...]
+    chunks = []
     temp = []
-    currChunk = []
-    for i,v in enumerate(y):
-        currChunk.append(v)
-        if(all([abs(j-v)<=margin for j in currChunk[0:-1]])):#(i!=0 and abs(v-y[i-1])<=margin)
-            if temp==[]:temp.append(i)
-            else: 
-                if(len(temp)==1):temp.append(0)
-                temp[1]=i
-        elif len(temp)>1:
-            # print (t[temp[0]:temp[1]])
-            if((temp[1]-temp[0])!=0):marginChunks.append(temp.copy())
-            temp = []
-            currChunk = []
+    for i,v in enumerate(y[:-1]):
+        if(abs(v-y[i+1])<=margin):
+            if(temp==[]):temp = [i,i+1]
+            else:
+                temp[1] = i+1
         else:
-            currChunk = []
+            print("temp",temp)
+            if(len(temp)>1):chunks.append(temp)
             temp = []
-        
-    
-    
-
-    return marginChunks
+        print(t[i],abs(v-y[i+1]),abs(v-y[i+1])<=margin,[t[temp[0]],t[temp[1]]] if len(temp)>1 else "")
+    if(len(temp)>1):chunks.append(temp)
+    return chunks
 def smoothNoiseChunks(t,y):
     y = y.copy()
-    for chunk in getNoiseChunks(t,y,5):
+    for chunk in getNoiseChunks(t,y):
         smoothed = getSmooth(t[chunk[0]:chunk[1]],y[chunk[0]:chunk[1]])
-        print(getSpan(t,y),len(smoothed),chunk[1]-chunk[0])
-        if(chunk[1]-chunk[0]<getSpan(t,y)*2):continue
         y[chunk[0]:chunk[1]] = smoothed
     return y
