@@ -37,15 +37,15 @@ def analyze():
             t = interest["Test Time"]
             watts = interest["Watt"]
             wattHrs = watts.copy()
-            for i, v in enumerate(wattHrs):
-                wattHrs[i] = (v*t[i])//3600
+            # for i, v in enumerate(wattHrs):
+            #     wattHrs[i] = (v*t[i])//3600
+            # watts = smoothNoiseChunks(t,watts,2,1,1)
 
             origWatts = watts.copy()
             watts = smoothNoiseChunks(t, watts)
-            # dwattsdt = getSmooth(t, dt(t, watts))
-            # wattsPeaks = getPeaks(t, watts)
-            if(len(watts)!=len(t)):print("fishy")
-
+            dwattsdt = dt(t, watts)
+            wattsPeaks = getCleanPeaks(t, watts)
+            wattsPeaksDirty = getPeaks(t,watts)
             writer.writerow(["Time (s): "]+t)
             writer.writerow(["Original Watts: "] + [str(i) for i in origWatts])
             writer.writerow(["Watts: "]+[str(i) for i in watts])
@@ -58,20 +58,39 @@ def analyze():
             plt.figure()
 
             # plt.subplot(211)
-            plt.plot(t, origWatts, "o")#"paleturquoise")
-            plt.plot(t, watts, "black")
-            nchunks = getNoiseChunks(t,origWatts)
-            for i in nchunks:
-                plt.plot( t[i[0]:i[1]] ,origWatts[i[0]:i[1]],"b")
+            # plt.plot(t, origWatts, "paleturquoise")
+            # plt.plot(t, watts, "black")
             # plt.plot([t[i] for i in wattsPeaks], [watts[i]
             #          for i in wattsPeaks], "o")
-            plt.title("watts")
+            # plt.title("watts")
+
+
             
 
-            print(nchunks)
             # plt.subplot(212)
             # plt.plot(t[1:], dwattsdt, "brown")
             # plt.title("dwatts/dt")
+
+            # plt.show()
+
+            w = plt.subplot(211)
+            w.plot(t, interest["Watt"], "paleturquoise")
+            w.plot(t, origWatts, "turquoise")
+            w.plot(t, watts, "b")
+            for i in getNoiseChunks(t,origWatts):
+                plt.plot( t[i[0]:i[1]] ,origWatts[i[0]:i[1]],"black")
+            w.scatter([t[i] for i in wattsPeaksDirty], [watts[i]
+                     for i in wattsPeaksDirty], c="red")
+            w.scatter([t[i] for i in wattsPeaks], [watts[i]
+                     for i in wattsPeaks], c="green")
+
+            
+            plt.title("watts")
+            
+
+            dw = plt.subplot(212,sharex = w)
+            plt.title("dwatts/dt")
+            dw.plot(t[1:], dwattsdt, "o")
 
             plt.show()
 

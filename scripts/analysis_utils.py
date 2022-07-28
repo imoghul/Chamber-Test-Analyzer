@@ -1,17 +1,44 @@
 import enum
 import numpy as np
 import statistics
+from utils import *
 import statsmodels.api as sm
 import scipy
 
 def dt(time, data):
-    res = []
+    data = data.copy()
+    # res = []
     if(len(time)!=len(data)):
         raise Exception("incorrect sizes")
-    for i, v in enumerate(data[1:]):
-        res.append((v-data[i-1])/(float(time[i])-float(time[i-1])))
+    # for i, v in enumerate(data[1:]):
+    #     res.append((v-data[i-1])/(time[i]-time[i-1]))
+    # return res
+    return np.diff(data)/np.diff(time)
+
+def getPeaks(t, data):
+    res = []
+    diff = dt(t, data)
+    for i, v in enumerate(diff):
+        if(v == 0 or (i != 0 and v*diff[i-1] <= 0)):
+            res.append(i)
+
+    for i,v in enumerate(data[1:-1]):
+        if ((v > data[i-1] and v < data[i+1]) or (v < data[i-1] and v > data[i+1])) and i not in res:
+            res.append(i)
     return res
 
+def getCleanPeaks(t,data,error=.1):
+    peaks = getPeaks(t,data)
+    rm = []
+    for p in peaks:
+        try:
+            if(abs(data[p-1]-data[p])<=error and abs(data[p+1]-data[p])<=error):
+                rm.append(p)
+        except:
+            pass
+    for i in rm:
+        peaks.remove(i)
+    return peaks
 
 def smooth(arr, span):
     cumsum_vec = np.cumsum(arr)
@@ -30,9 +57,9 @@ def smooth(arr, span):
 
 
 def getSpan(t, y):
-    span = len(getPeaks(t, y))//50
-    if(span < 5):
-        span = 5
+    span = len(getPeaks(t, y))//75
+    if(span < 2):
+        span = 2
     return span
 
 def getIterations(t,y):
@@ -54,33 +81,18 @@ def getSmooth(t, y, iterations=None, span=None):
         iterations = getIterations(t,y)
     if(span == None):
         span = getSpan(t, y)
-    if(len(y)<2*span):
-        if(len(y)):return len(y)*[y[0]]
-        else:return y
+    if(len(y)<2*span): return y
+        # if(len(y)):return len(y)*[average(y)]
+        # else:return y
     smoov = smooth(y, span)
     for i in range(iterations-1):
         smoov = smooth(smoov, span)
     return smoov
 
 
-def getPeaks(t, data):
-    res = []
-    diff = dt(t, data)
-    for i, v in enumerate(diff):
-        if(v == 0 or (i != 0 and v*diff[i-1] < 0)):
-            res.append(i)
-
-    # clean up bouncing
-    bounces = []
-    for i, v in enumerate(res[1:]):
-        if(v == res[i-1]+1):
-            bounces.append(v)
-    for i in bounces:
-        res.remove(i)
-    return res
 
 
-def getNoiseChunks(t,y,margin = 5): # returns [[a,b],[c,d],[e,f]...]
+def getNoiseChunks(t,y,margin=3): # returns [[a,b],[c,d],[e,f]...]
     chunks = []
     temp = []
     for i,v in enumerate(y[:-1]):
@@ -89,15 +101,13 @@ def getNoiseChunks(t,y,margin = 5): # returns [[a,b],[c,d],[e,f]...]
             else:
                 temp[1] = i+1
         else:
-            print("temp",temp)
             if(len(temp)>1):chunks.append(temp)
             temp = []
-        print(t[i],abs(v-y[i+1]),abs(v-y[i+1])<=margin,[t[temp[0]],t[temp[1]]] if len(temp)>1 else "")
     if(len(temp)>1):chunks.append(temp)
     return chunks
-def smoothNoiseChunks(t,y):
+def smoothNoiseChunks(t,y,margin = 3,iterations = None, span = None):
     y = y.copy()
-    for chunk in getNoiseChunks(t,y):
-        smoothed = getSmooth(t[chunk[0]:chunk[1]],y[chunk[0]:chunk[1]])
+    for chunk in getNoiseChunks(t,y,margin):
+        smoothed = getSmooth(t[chunk[0]:chunk[1]],y[chunk[0]:chunk[1]],iterations,span)
         y[chunk[0]:chunk[1]] = smoothed
     return y
