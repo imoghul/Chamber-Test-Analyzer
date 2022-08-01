@@ -78,13 +78,14 @@ def analyze():
             writer.writerow(["Time (s): "]+t)
             writer.writerow(["Original Watts: "] + [str(i) for i in interest["Watt"]])
             writer.writerow(["Refined Watts: "]+[str(i) for i in watts])
-            writer.writerow(
-                ["Watts Peaks:"]+['1' if i in wattsPeaks else '' for i, _ in enumerate(watts)])
-            writer.writerow(["Peaks"]+[peaksData[i] if v in t else "" for i,v in enumerate(peaksT)])
-            writer.writerow(["Peaks Peaks"]+[peaksData[i] if (v in t and i in peaksPeaksDirty) else "" for i,v in enumerate(peaksT)])
+            writer.writerow(["Watts Peaks Refined:"]+[watts[i] if i in wattsPeaks else '' for i, _ in enumerate(watts)])
+            writer.writerow(["Watts Peaks Unrefined:"]+[watts[i] if i in wattsPeaksDirty else '' for i, _ in enumerate(watts)])
+            writer.writerow(["Peaks Peaks Dirty:"]+[watts[i] if i in peaksPeaksDirty else '' for i, _ in enumerate(watts)])
             outTimeline = ["Timeline:"]
-            for i,v in enumerate(getTimeline(t,peaksPeaksDirty)):
-                for j in range((t.index(peaksT[i+1]) if i!=(len(peaksT)-1) else len(peaksT)-1)-t.index(peaksT[i])):outTimeline.append(v)
+            timeline = getTimeline(t,watts,peaksPeaksDirty)
+            for i,v in enumerate(timeline):
+                outTimeline.append(v if timeline[i-1] != v else "")
+                for j in range(((t.index(peaksT[i+1]) if i!=(len(peaksT)-1) else len(peaksT)-1)-t.index(peaksT[i]))-1):outTimeline.append("")
             writer.writerow(outTimeline)
             writer.writerow(["-"*len(t)])
 

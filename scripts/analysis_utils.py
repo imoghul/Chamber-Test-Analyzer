@@ -71,8 +71,8 @@ def getIterations(t,y):
 
     if(iterations < 5):
         iterations = 5
-    if(iterations > 5000):
-        iterations = 5000
+    if(iterations > 100):
+        iterations = 100
     return iterations
 
 def getSmooth(t, y, iterations=None, span=None):
@@ -91,11 +91,11 @@ def getSmooth(t, y, iterations=None, span=None):
 
 
 
-def getNoiseChunks(t,y,margin=1.5): # returns [[a,b],[c,d],[e,f]...]
+def getNoiseChunks(t,y,margin=1.5,sumMargin = 5): # returns [[a,b],[c,d],[e,f]...]
     chunks = []
     temp = []
     for i,v in getIterable("Calculating noisy chunks",enumerate(y[:-1])):
-        if(abs(v-y[i+1])<=margin):
+        if( abs(v-y[i+1])<=margin and (all([abs(v-j)<=sumMargin for j in y[temp[0]:temp[1]]]) if len(temp) else True)):
             if(temp==[]):temp = [i,i+1]
             else:
                 temp[1] = i+1
@@ -104,25 +104,26 @@ def getNoiseChunks(t,y,margin=1.5): # returns [[a,b],[c,d],[e,f]...]
             temp = []
     if(len(temp)>1):chunks.append(temp)
     return chunks
-def smoothNoiseChunks(t,y,chunks,margin = 1.5,iterations = None, span = None):
+def smoothNoiseChunks(t,y,chunks,iterations = None, span = None):
     y = y.copy()
     threads = []
-    for chunk in chunks:#getNoiseChunks(t,y,margin):#getIterable("Smoothing noisy chunks",getNoiseChunks(t,y,margin)):
-        def run(y):
+    for chunk in chunks:
+        # def run(y):
             y[chunk[0]:chunk[1]] = getSmooth(t[chunk[0]:chunk[1]],y[chunk[0]:chunk[1]],iterations,span)
-        threads.append(threading.Thread(target = run,args=[y]))
-    runThreads(threads,100,"Smoothing noisy chunks",leave=False)
+        
+        # threads.append(threading.Thread(target = run,args=[y]))
+    # runThreads(threads,100,"Smoothing noisy chunks",leave=False)
     return y
 
 
 
-def getTimeline(t,peaks):
+def getTimeline(t,y,peaks):
     res = []
-    for i,v in enumerate(peaks[:-1]):
-        diff = (peaks[i+1]-v)/(t[i+1]-t[i])
-        if diff>2:
+    for i in peaks[:-1]:
+        diff = (y[i+1]-y[i])/(t[i+1]-t[i])
+        if diff>1e-6:
             res.append("pulling down")
-        elif diff<-2:
+        elif diff<-1e-6:
             res.append("cooling off")
         else:
             res.append("steady state")
