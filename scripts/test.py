@@ -36,32 +36,22 @@ def analyze():
 
             t = interest["Test Time"]
             watts = interest["Watt"]
-            wattHrs = watts.copy()
-
 
             iterations = 4
             subplots = [200+iterations*10+j+1 for j in range(2*iterations)]
-            for iter in getIterable(range(iterations)):
+            for iter in getIterable("Iterations",range(iterations)):
                 origWatts = watts.copy()
-                watts = smoothNoiseChunks(t, watts)
-                dwattsdt = dt(t, watts)
+                noiseChunks = getNoiseChunks(t,origWatts)
+                watts = smoothNoiseChunks(t, watts,noiseChunks)
                 wattsPeaksDirty = getPeaks(t,watts)
                 wattsPeaks = getCleanPeaks(t, watts,wattsPeaksDirty)
-                # writer.writerow(["Time (s): "]+t)
-                # writer.writerow(["Original Watts: "] + [str(i) for i in origWatts])
-                # writer.writerow(["Watts: "]+[str(i) for i in watts])
-                # writer.writerow(
-                #     ["Watts Peaks:"]+['1' if i in wattsPeaks else '' for i, _ in enumerate(watts)])
-                # writer.writerow(["dwatts/dt",""]+[str(i) for i in dt(t, watts)])
-                # writer.writerow(["-"*len(t)])
 
                 plt.figure(fn)
                 w = plt.subplot(subplots[iter])#(211)
                 w.plot(t, interest["Watt"], "paleturquoise")
                 w.plot(t, origWatts, "turquoise")
-                w.plot(t, watts, "b")
-                # w.scatter(t, watts, c="blue")
-                for i in getNoiseChunks(t,origWatts):
+                w.plot(t, watts, "blue")
+                for i in noiseChunks:
                     plt.plot( t[i[0]:i[1]] ,origWatts[i[0]:i[1]],"black")
                 w.scatter([t[i] for i in wattsPeaksDirty], [watts[i]
                         for i in wattsPeaksDirty], c="red")
@@ -75,7 +65,7 @@ def analyze():
                 peaksT = [t[i] for i in wattsPeaksDirty]
                 peaksData = [watts[i]for i in wattsPeaksDirty]
                 p.plot(peaksT, peaksData,"red")
-                peaksData = smoothNoiseChunks(peaksT,peaksData)
+                peaksData = smoothNoiseChunks(peaksT,peaksData,getNoiseChunks(peaksT,peaksData))
                 p.plot(peaksT,peaksData)
                 peaksPeaksDirty = getPeaks(peaksT,peaksData)
                 peaksPeaks = getCleanPeaks(peaksT, peaksData,peaksPeaksDirty)
@@ -83,6 +73,20 @@ def analyze():
                         for i in peaksPeaksDirty], c="red")
                 p.scatter([peaksT[i] for i in peaksPeaks], [peaksData[i]
                         for i in peaksPeaks], c="green")
+
+            
+            writer.writerow(["Time (s): "]+t)
+            writer.writerow(["Original Watts: "] + [str(i) for i in interest["Watt"]])
+            writer.writerow(["Refined Watts: "]+[str(i) for i in watts])
+            writer.writerow(
+                ["Watts Peaks:"]+['1' if i in wattsPeaks else '' for i, _ in enumerate(watts)])
+            writer.writerow(["Peaks"]+[peaksData[i] if v in t else "" for i,v in enumerate(peaksT)])
+            writer.writerow(["Peaks Peaks"]+[peaksData[i] if (v in t and i in peaksPeaksDirty) else "" for i,v in enumerate(peaksT)])
+            outTimeline = ["Timeline:"]
+            for i,v in enumerate(getTimeline(t,peaksPeaksDirty)):
+                for j in range((t.index(peaksT[i+1]) if i!=(len(peaksT)-1) else len(peaksT)-1)-t.index(peaksT[i])):outTimeline.append(v)
+            writer.writerow(outTimeline)
+            writer.writerow(["-"*len(t)])
 
             plt.show()
 

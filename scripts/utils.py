@@ -87,14 +87,14 @@ def allInSome(targets, finds):
     return True in [allIn(i, finds) for i in targets]
 
 
-def runThreads(threads, max, message):
+def runThreads(threads, max, message,leave = True):
     originalMax = max
     upperMax = 15000
     processing = []
     dead = []
     length = len(threads)
     counter = 0
-    with tqdm(total=length) as pbar:
+    with tqdm(total=length,leave=leave) as pbar:
         pbar.set_description(message)
         while counter < length:
             allAlive = True
