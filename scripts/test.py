@@ -41,7 +41,7 @@ def analyze():
             iterations = 4
             subplots = [200+iterations*10+j+1 for j in range(2*iterations)]
             # for iter in getIterable("Iterations",range(iterations)):
-            origWatts = watts.copy()
+            origWatts = smooth(t,watts.copy(),sigma = 1)
             noiseChunks = getNoiseChunks(t,origWatts)
             watts = smoothNoiseChunks(t, watts,noiseChunks)
             wattsPeaksDirty = getPeaks(t,watts)
@@ -62,7 +62,7 @@ def analyze():
                     for i in wattsPeaks], c="green")
             plt.title("watts")#("watts %d"%(iter+1))
 
-            e = plt.subplot(grid[0, 2:4])#plt.subplot(2,iterations,3)
+            e = plt.subplot(grid[0, 2:4],sharex = w,sharey = w)#plt.subplot(2,iterations,3)
             e.plot(t, watts, "blue")
             plt.title("processed watts")
                 

@@ -42,7 +42,7 @@ def getCleanPeaks(t,data,peaks,errorMax=.05):
         peaks.remove(i)
     return peaks
 
-def smooth(t,arr, span):
+def smooth(t,arr, sigma):
     # cumsum_vec = np.cumsum(arr)
     # moving_average = (cumsum_vec[2 * span:] -
     #                   cumsum_vec[:-2 * span]) / (2 * span)
@@ -55,18 +55,14 @@ def smooth(t,arr, span):
     #     back.insert(0, np.average(arr[-i - span:]))
     # back.insert(0, np.average(arr[-2 * span:]))
     # return np.concatenate((front, moving_average, back))
-    return gaussian_filter1d(arr, sigma=2)
+    return gaussian_filter1d(arr, sigma=sigma)
 
-
-def getSpan(t, y):
-    span = len(getPeaks(t, y))//50
-    if(span < 2):
-        span = 2
-    return span
+def getSigma(t,y):
+    return 5
 
 def getIterations(t,y):
     try:
-        iterations = round(5/statistics.stdev(y))
+        iterations = round(10/statistics.stdev(y))
     except:
         iterations = 0
 
@@ -76,17 +72,14 @@ def getIterations(t,y):
         iterations = 100
     return iterations
 
-def getSmooth(t, y, iterations=None, span=None):
+def getSmooth(t, y, iterations=None,sigma = None):
     if(iterations == None):
         iterations = getIterations(t,y)
-    if(span == None):
-        span = getSpan(t, y)
-    if(len(y)<2*span): return y
-        # if(len(y)):return len(y)*[average(y)]
-        # else:return y
-    smoov = smooth(t,y, span)
+    if(sigma ==  None):
+        sigma = getSigma(t,y)
+    smoov = smooth(t,y,sigma = sigma)
     for i in getIterable("Smoothing",range(iterations-1)):
-        smoov = smooth(t,smoov, span)
+        smoov = smooth(t,smoov,sigma = sigma)
     return smoov
 
 
@@ -105,10 +98,10 @@ def getNoiseChunks(t,y,margin=1.5,sumMargin = 5): # returns [[a,b],[c,d],[e,f]..
             temp = []
     if(len(temp)>1):chunks.append(temp)
     return chunks
-def smoothNoiseChunks(t,y,chunks,iterations = None, span = None):
+def smoothNoiseChunks(t,y,chunks,iterations = None, sigma = None):
     y = y.copy()
     for chunk in chunks:
-        y[chunk[0]:chunk[1]] = getSmooth(t[chunk[0]:chunk[1]],y[chunk[0]:chunk[1]],iterations,span)
+        y[chunk[0]:chunk[1]] = getSmooth(t[chunk[0]:chunk[1]],y[chunk[0]:chunk[1]],iterations = iterations,sigma = sigma)
     return y
 
 
