@@ -41,7 +41,7 @@ def analyze():
             iterations = 4
             subplots = [200+iterations*10+j+1 for j in range(2*iterations)]
             # for iter in getIterable("Iterations",range(iterations)):
-            origWatts = smooth(t,watts.copy(),sigma = 1)
+            origWatts = watts.copy()#smooth(t,watts.copy(),sigma = 1)
             noiseChunks = getNoiseChunks(t,origWatts)
             watts = smoothNoiseChunks(t, watts,noiseChunks)
             wattsPeaksDirty = getPeaks(t,watts)

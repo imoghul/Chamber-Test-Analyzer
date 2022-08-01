@@ -28,6 +28,8 @@ headers = []
 threads = []
 dirNum = 0
 
+outputJson = 'data.json'
+
 
 def calc(fileName, dud):
     global logger
@@ -65,7 +67,7 @@ def calc(fileName, dud):
                     else:
                         logger.error(
                             Exception("headers and data values don't match on row %d" % rowNum))
-            # write_json(fileName,data,outdir+"data.json")
+            # write_json(fileName,data,outdir+outputJson)
             return data
     except csv.Error as e:
         pass
@@ -95,15 +97,15 @@ def writeDataToFile(writer, dir, fileNames):
         data = calc(fileName, 0)
         # "P Temp chamber" in data and -999 not in data["P Temp chamber"] and "P pidPTerm" in data and len(data["P pidPTerm"]) != data["P pidPTerm"].count(-999) and "P pidISum" in data and len(data["P pidISum"]) != data["P pidISum"].count(-999):
         if True:
-            write_json(fileName, data, outdir+"data.json")
+            write_json(fileName, data, outdir+outputJson)
             c += 1
-        if c >= 100:
-            return
+        # if c >= 100:
+        #     return
 
 
 def writeSummaryToFile(writer):
     global threads, headers
-    data = get_json(outdir+"data.json")
+    data = get_json(outdir+outputJson)
     # print(data[list(
     # data.keys())[0]])
     bar = tqdm(data)
@@ -128,7 +130,7 @@ def transfer(odir, log):
     global outdir, logger, outFileName
     logger = log
     outdir = odir
-    with open(outdir+"data.json", "w") as dataFile:
+    with open(outdir+outputJson, "w") as dataFile:
         json.dump({}, dataFile, indent=4)
 
 
@@ -137,7 +139,7 @@ def getOutFileName():
 
 
 # function to add to JSON
-def write_json(key, new_data, filename=outdir+'data.json'):
+def write_json(key, new_data, filename=outdir+outputJson):
     try:
         with open(filename, 'r+') as file:
             # First we load existing data into a dict.
@@ -157,6 +159,6 @@ def write_json(key, new_data, filename=outdir+'data.json'):
         write_json(key, new_data, filename)
 
 
-def get_json(filename=outdir+'data.json'):
+def get_json(filename=outdir+outputJson):
     with open(filename, 'r') as file:
         return json.load(file)

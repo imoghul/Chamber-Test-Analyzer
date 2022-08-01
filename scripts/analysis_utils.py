@@ -19,13 +19,18 @@ def dt(time, data):
         raise Exception("incorrect sizes")
     return np.diff(data)/np.diff(time)
 
-def getPeaks(t, data):
+def getPeaks(t, data): # returns list of indexes
     res = []
-    diff = dt(t, data)
-    for i, v in  getIterable("Calculating maxima/minima",enumerate(diff)):
-        if(v == 0 or (i != 0 and v*diff[i-1] <= 0)):
+    if(not len(data)):return []
+    if(len(data)<=3):return [data.index(max(data))]
+    # diff = dt(t, data)
+    # for i, v in  getIterable("Calculating maxima/minima",enumerate(diff)):
+    #     if(v == 0 or (i != 0 and v*diff[i-1] <= 0)):
+    #         res.append(i)
+    for i,_ in getIterable("Calculating maxima/minima",enumerate(data)):
+        if(i==0 or i == len(data)-1):continue
+        if(data[i]>data[i-1] and data[i]>data[i+1]) or (data[i]<data[i-1] and data[i]<data[i+1]):
             res.append(i)
-
     return res
 
 def getCleanPeaks(t,data,peaks,errorMax=.05):
@@ -43,26 +48,14 @@ def getCleanPeaks(t,data,peaks,errorMax=.05):
     return peaks
 
 def smooth(t,arr, sigma):
-    # cumsum_vec = np.cumsum(arr)
-    # moving_average = (cumsum_vec[2 * span:] -
-    #                   cumsum_vec[:-2 * span]) / (2 * span)
-
-    # # The "my_average" part again. Slightly different to before, because the
-    # # moving average from cumsum is shorter than the input and needs to be padded
-    # front, back = [np.average(arr[:span])], []
-    # for i in range(1, span):
-    #     front.append(np.average(arr[:i + span]))
-    #     back.insert(0, np.average(arr[-i - span:]))
-    # back.insert(0, np.average(arr[-2 * span:]))
-    # return np.concatenate((front, moving_average, back))
     return gaussian_filter1d(arr, sigma=sigma)
 
 def getSigma(t,y):
-    return 5
+    return 3
 
 def getIterations(t,y):
     try:
-        iterations = round(10/statistics.stdev(y))
+        iterations = round(20/statistics.stdev(y))
     except:
         iterations = 0
 
