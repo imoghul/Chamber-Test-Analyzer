@@ -3,7 +3,7 @@ import threading
 import numpy as np
 import statistics
 from utils import *
-import statsmodels.api as sm
+from scipy.ndimage.filters import gaussian_filter1d
 import scipy
 import os
 from tqdm import tqdm
@@ -42,19 +42,20 @@ def getCleanPeaks(t,data,peaks,errorMax=.05):
         peaks.remove(i)
     return peaks
 
-def smooth(arr, span):
-    cumsum_vec = np.cumsum(arr)
-    moving_average = (cumsum_vec[2 * span:] -
-                      cumsum_vec[:-2 * span]) / (2 * span)
+def smooth(t,arr, span):
+    # cumsum_vec = np.cumsum(arr)
+    # moving_average = (cumsum_vec[2 * span:] -
+    #                   cumsum_vec[:-2 * span]) / (2 * span)
 
-    # The "my_average" part again. Slightly different to before, because the
-    # moving average from cumsum is shorter than the input and needs to be padded
-    front, back = [np.average(arr[:span])], []
-    for i in range(1, span):
-        front.append(np.average(arr[:i + span]))
-        back.insert(0, np.average(arr[-i - span:]))
-    back.insert(0, np.average(arr[-2 * span:]))
-    return np.concatenate((front, moving_average, back))
+    # # The "my_average" part again. Slightly different to before, because the
+    # # moving average from cumsum is shorter than the input and needs to be padded
+    # front, back = [np.average(arr[:span])], []
+    # for i in range(1, span):
+    #     front.append(np.average(arr[:i + span]))
+    #     back.insert(0, np.average(arr[-i - span:]))
+    # back.insert(0, np.average(arr[-2 * span:]))
+    # return np.concatenate((front, moving_average, back))
+    return gaussian_filter1d(arr, sigma=2)
 
 
 def getSpan(t, y):
@@ -83,9 +84,9 @@ def getSmooth(t, y, iterations=None, span=None):
     if(len(y)<2*span): return y
         # if(len(y)):return len(y)*[average(y)]
         # else:return y
-    smoov = smooth(y, span)
+    smoov = smooth(t,y, span)
     for i in getIterable("Smoothing",range(iterations-1)):
-        smoov = smooth(smoov, span)
+        smoov = smooth(t,smoov, span)
     return smoov
 
 
@@ -95,7 +96,7 @@ def getNoiseChunks(t,y,margin=1.5,sumMargin = 5): # returns [[a,b],[c,d],[e,f]..
     chunks = []
     temp = []
     for i,v in getIterable("Calculating noisy chunks",enumerate(y[:-1])):
-        if( abs(v-y[i+1])<=margin and (all([abs(v-j)<=sumMargin for j in y[temp[0]:temp[1]]]) if len(temp) else True)):
+        if( abs(v-y[i+1])<=margin):# and (all([abs(v-j)<=sumMargin for j in y[temp[0]:temp[1]]]) if len(temp) else True)):
             if(temp==[]):temp = [i,i+1]
             else:
                 temp[1] = i+1
@@ -106,13 +107,8 @@ def getNoiseChunks(t,y,margin=1.5,sumMargin = 5): # returns [[a,b],[c,d],[e,f]..
     return chunks
 def smoothNoiseChunks(t,y,chunks,iterations = None, span = None):
     y = y.copy()
-    threads = []
     for chunk in chunks:
-        # def run(y):
-            y[chunk[0]:chunk[1]] = getSmooth(t[chunk[0]:chunk[1]],y[chunk[0]:chunk[1]],iterations,span)
-        
-        # threads.append(threading.Thread(target = run,args=[y]))
-    # runThreads(threads,100,"Smoothing noisy chunks",leave=False)
+        y[chunk[0]:chunk[1]] = getSmooth(t[chunk[0]:chunk[1]],y[chunk[0]:chunk[1]],iterations,span)
     return y
 
 

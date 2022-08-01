@@ -15,6 +15,7 @@ from tqdm import tqdm
 import dateutil.parser
 import logging
 import random
+from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 import numpy as np
 from analysis_utils import *
@@ -39,28 +40,36 @@ def analyze():
 
             iterations = 4
             subplots = [200+iterations*10+j+1 for j in range(2*iterations)]
+            # for iter in getIterable("Iterations",range(iterations)):
+            origWatts = watts.copy()
+            noiseChunks = getNoiseChunks(t,origWatts)
+            watts = smoothNoiseChunks(t, watts,noiseChunks)
+            wattsPeaksDirty = getPeaks(t,watts)
+            wattsPeaks = getCleanPeaks(t, watts,wattsPeaksDirty)
+
+            plt.figure(fn)
+            grid = plt.GridSpec(2, iterations, wspace =0.3, hspace = 0.3)
+            
+            w = plt.subplot(grid[0, 0:2])#plt.subplot(2,iterations,1)
+            w.plot(t, interest["Watt"], "paleturquoise")
+            w.plot(t, origWatts, "turquoise")
+            w.plot(t, watts, "blue")
+            for i in noiseChunks:
+                plt.plot( t[i[0]:i[1]] ,origWatts[i[0]:i[1]],"black")
+            w.scatter([t[i] for i in wattsPeaksDirty], [watts[i]
+                    for i in wattsPeaksDirty], c="red")
+            w.scatter([t[i] for i in wattsPeaks], [watts[i]
+                    for i in wattsPeaks], c="green")
+            plt.title("watts")#("watts %d"%(iter+1))
+
+            e = plt.subplot(grid[0, 2:4])#plt.subplot(2,iterations,3)
+            e.plot(t, watts, "blue")
+            plt.title("processed watts")
+                
             for iter in getIterable("Iterations",range(iterations)):
-                origWatts = watts.copy()
-                noiseChunks = getNoiseChunks(t,origWatts)
-                watts = smoothNoiseChunks(t, watts,noiseChunks)
                 wattsPeaksDirty = getPeaks(t,watts)
                 wattsPeaks = getCleanPeaks(t, watts,wattsPeaksDirty)
-
-                plt.figure(fn)
-                w = plt.subplot(subplots[iter])#(211)
-                w.plot(t, interest["Watt"], "paleturquoise")
-                w.plot(t, origWatts, "turquoise")
-                w.plot(t, watts, "blue")
-                for i in noiseChunks:
-                    plt.plot( t[i[0]:i[1]] ,origWatts[i[0]:i[1]],"black")
-                w.scatter([t[i] for i in wattsPeaksDirty], [watts[i]
-                        for i in wattsPeaksDirty], c="red")
-                w.scatter([t[i] for i in wattsPeaks], [watts[i]
-                        for i in wattsPeaks], c="green")
-                plt.title("watts %d"%(iter+1))
-                
-
-                p = plt.subplot(subplots[iter+iterations],sharex = w)
+                p = plt.subplot(grid[1,iter])#plt.subplot(subplots[iter+iterations],sharex = w)
                 plt.title("peaks %d"%(iter+1))
                 peaksT = [t[i] for i in wattsPeaksDirty]
                 peaksData = [watts[i]for i in wattsPeaksDirty]
