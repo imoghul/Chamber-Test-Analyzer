@@ -89,7 +89,7 @@ def getSmooth(t, y, iterations=None,sigma = None):
 
 
 
-def getNoiseChunks(t,y,margin=2,sumMargin = 5): # returns [[a,b],[c,d],[e,f]...]
+def getNoiseChunks(t,y,margin=10,sumMargin = 5): # returns [[a,b],[c,d],[e,f]...]
     chunks = []
     temp = []
     diff = dt(t,y)

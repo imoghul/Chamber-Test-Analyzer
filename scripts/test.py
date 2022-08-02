@@ -66,6 +66,7 @@ def analyze():
             plt.title("watts")#("watts %d"%(iter+1))
 
             e = plt.subplot(grid[0, 2:4],sharex = w,sharey = w)#plt.subplot(2,iterations,3)
+            e.plot(t, interest["Watt"], "paleturquoise")
             e.plot(t, watts, "blue")
             plt.title("processed watts")
                 
