@@ -51,11 +51,14 @@ def smooth(t,arr, sigma):
     return gaussian_filter1d(arr, sigma=sigma)
 
 def getSigma(t,y):
-    return 3
+    # try:
+    #     return 10/average([abs(v-y[i-1]) for i,v in enumerate(y)])
+    # except:
+        return 3
 
 def getIterations(t,y):
     try:
-        iterations = round(20/statistics.stdev(y))
+        iterations = round(30/statistics.stdev(y))
     except:
         iterations = 0
 
@@ -78,11 +81,12 @@ def getSmooth(t, y, iterations=None,sigma = None):
 
 
 
-def getNoiseChunks(t,y,margin=1.5,sumMargin = 5): # returns [[a,b],[c,d],[e,f]...]
+def getNoiseChunks(t,y,margin=2,sumMargin = 5): # returns [[a,b],[c,d],[e,f]...]
     chunks = []
     temp = []
+    diff = dt(t,y)
     for i,v in getIterable("Calculating noisy chunks",enumerate(y[:-1])):
-        if( abs(v-y[i+1])<=margin):# and (all([abs(v-j)<=sumMargin for j in y[temp[0]:temp[1]]]) if len(temp) else True)):
+        if abs(v-y[i+1])<=margin or (i!=len(y) and diff[i+1]*diff[i]<0):# and (all([abs(v-j)<=sumMargin for j in y[temp[0]:temp[1]+1]]) if len(temp) else True):
             if(temp==[]):temp = [i,i+1]
             else:
                 temp[1] = i+1
@@ -94,7 +98,8 @@ def getNoiseChunks(t,y,margin=1.5,sumMargin = 5): # returns [[a,b],[c,d],[e,f]..
 def smoothNoiseChunks(t,y,chunks,iterations = None, sigma = None):
     y = y.copy()
     for chunk in chunks:
-        y[chunk[0]:chunk[1]] = getSmooth(t[chunk[0]:chunk[1]],y[chunk[0]:chunk[1]],iterations = iterations,sigma = sigma)
+        y[chunk[0]:chunk[1]+1] = getSmooth(t[chunk[0]:chunk[1]+1],y[chunk[0]:chunk[1]+1],iterations = iterations,sigma = sigma)
+    # y = getSmooth(t,y,10,sigma=1)
     return y
 
 

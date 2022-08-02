@@ -30,6 +30,7 @@ dirNum = 0
 
 outputJson = 'data.json'
 
+detectedFiles = []
 
 def calc(fileName, dud):
     global logger
@@ -82,11 +83,11 @@ def calc(fileName, dud):
 
 
 def writeHeaderToFile(writer):
-    pass
+    get_json(outdir+outputJson)
 
 
 def writeDataToFile(writer, dir, fileNames):
-    global dirNum, threads
+    global dirNum, threads, detectedFiles
     dirNum += 1
 
     bar = tqdm(fileNames)
@@ -94,7 +95,11 @@ def writeDataToFile(writer, dir, fileNames):
         "Retrieving from the %s directory" % ordinal(dirNum))
     c = 0
     for fileName in bar:
+        
+        if fileName in detectedFiles:continue 
+
         data = calc(fileName, 0)
+        # detectedFiles.append(fileName)
         # "P Temp chamber" in data and -999 not in data["P Temp chamber"] and "P pidPTerm" in data and len(data["P pidPTerm"]) != data["P pidPTerm"].count(-999) and "P pidISum" in data and len(data["P pidISum"]) != data["P pidISum"].count(-999):
         if True:
             write_json(fileName, data, outdir+outputJson)
@@ -130,8 +135,10 @@ def transfer(odir, log):
     global outdir, logger, outFileName
     logger = log
     outdir = odir
-    with open(outdir+outputJson, "w") as dataFile:
-        json.dump({}, dataFile, indent=4)
+    get_json(outdir+outputJson)
+    # print(detectedFiles)
+    # with open(outdir+outputJson, "w") as dataFile:
+    #     json.dump({}, dataFile, indent=4)
 
 
 def getOutFileName():
@@ -140,12 +147,13 @@ def getOutFileName():
 
 # function to add to JSON
 def write_json(key, new_data, filename=outdir+outputJson):
+    global detectedFiles
     try:
         with open(filename, 'r+') as file:
             # First we load existing data into a dict.
             file_data = json.load(file)
             # Join new_data with file_data inside emp_details
-
+            detectedFiles = list(file_data.keys())
             # if(key not in file_data):file_data[key] = new_data
             # else:file_data[key].append(new_data)
             file_data[key] = new_data
@@ -160,5 +168,8 @@ def write_json(key, new_data, filename=outdir+outputJson):
 
 
 def get_json(filename=outdir+outputJson):
+    global detectedFiles
     with open(filename, 'r') as file:
-        return json.load(file)
+        d = json.load(file)
+        detectedFiles = list(d.keys())
+        return d

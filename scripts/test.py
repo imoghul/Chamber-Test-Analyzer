@@ -44,6 +44,7 @@ def analyze():
             origWatts = watts.copy()#smooth(t,watts.copy(),sigma = 1)
             noiseChunks = getNoiseChunks(t,origWatts)
             watts = smoothNoiseChunks(t, watts,noiseChunks)
+            # watts = smoothNoiseChunks(t,watts,getNoiseChunks(t,watts))
             wattsPeaksDirty = getPeaks(t,watts)
             wattsPeaks = getCleanPeaks(t, watts,wattsPeaksDirty)
 
@@ -55,7 +56,7 @@ def analyze():
             w.plot(t, origWatts, "turquoise")
             w.plot(t, watts, "blue")
             for i in noiseChunks:
-                plt.plot( t[i[0]:i[1]] ,origWatts[i[0]:i[1]],"black")
+                plt.plot( t[i[0]:i[1]+1] ,origWatts[i[0]:i[1]+1],"black")
             w.scatter([t[i] for i in wattsPeaksDirty], [watts[i]
                     for i in wattsPeaksDirty], c="red")
             w.scatter([t[i] for i in wattsPeaks], [watts[i]
