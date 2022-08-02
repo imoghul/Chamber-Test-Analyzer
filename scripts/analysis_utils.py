@@ -6,6 +6,7 @@ from utils import *
 from scipy.ndimage.filters import gaussian_filter1d
 import scipy
 import os
+from sklearn.neighbors import KNeighborsRegressor
 from tqdm import tqdm
 
 progBars = True
@@ -48,15 +49,22 @@ def getCleanPeaks(t,data,peaks,errorMax=.05):
     return peaks
 
 def smooth(t,arr, sigma):
+    # clf = KNeighborsRegressor(n_neighbors=100, weights='uniform')
+    # clf.fit(df.index.values[:, np.newaxis], 
+    #         df.iloc[:, 0])
+    # y_pred = clf.predict(df.index.values[:, np.newaxis])
+    # return y_pred
+    # # 
     return gaussian_filter1d(arr, sigma=sigma)
 
 def getSigma(t,y):
     # try:
     #     return 10/average([abs(v-y[i-1]) for i,v in enumerate(y)])
     # except:
-        return 5#3
+        return 1
 
 def getIterations(t,y):
+    return 20
     try:
         iterations = round(30/statistics.stdev(y))
     except:
