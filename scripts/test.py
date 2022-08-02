@@ -19,6 +19,7 @@ from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 import numpy as np
 from analysis_utils import *
+from scipy.signal import savgol_filter
 
 
 def analyze():
@@ -42,6 +43,7 @@ def analyze():
             subplots = [200+iterations*10+j+1 for j in range(2*iterations)]
             # for iter in getIterable("Iterations",range(iterations)):
             origWatts = watts.copy()#smooth(t,watts.copy(),sigma = 1)
+            # origWatts = savgol_filter(origWatts, 101, 2)
             noiseChunks = getNoiseChunks(t,origWatts)
             watts = smoothNoiseChunks(t, watts,noiseChunks)
             # watts = smoothNoiseChunks(t,watts,getNoiseChunks(t,watts))

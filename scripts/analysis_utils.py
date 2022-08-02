@@ -54,7 +54,7 @@ def getSigma(t,y):
     # try:
     #     return 10/average([abs(v-y[i-1]) for i,v in enumerate(y)])
     # except:
-        return 3
+        return 5#3
 
 def getIterations(t,y):
     try:
@@ -86,7 +86,7 @@ def getNoiseChunks(t,y,margin=2,sumMargin = 5): # returns [[a,b],[c,d],[e,f]...]
     temp = []
     diff = dt(t,y)
     for i,v in getIterable("Calculating noisy chunks",enumerate(y[:-1])):
-        if abs(v-y[i+1])<=margin or (i!=len(y) and diff[i+1]*diff[i]<0):# and (all([abs(v-j)<=sumMargin for j in y[temp[0]:temp[1]+1]]) if len(temp) else True):
+        if abs(v-y[i+1])<=margin:# and (all([abs(v-j)<=sumMargin for j in y[temp[0]:temp[1]+1]]) if len(temp) else True):
             if(temp==[]):temp = [i,i+1]
             else:
                 temp[1] = i+1
