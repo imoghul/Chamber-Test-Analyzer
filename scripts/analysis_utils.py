@@ -1,4 +1,6 @@
 import enum
+from linecache import getline
+from pydoc import plainpager
 import threading
 import numpy as np
 import statistics
@@ -21,7 +23,7 @@ def dt(time, data):
         raise Exception("incorrect sizes")
     return np.diff(data)/np.diff(time)
 
-def getLinearParts(time, data,margin = 1e-6):
+def getLinearParts(time, data,margin = 5e-7):#5e-7):
     d1 = dt(time,data)
     d2 = dt(time[1:],d1)
     chunks = []
@@ -33,9 +35,9 @@ def getLinearParts(time, data,margin = 1e-6):
             else:
                 temp[1] = i+1
         else:
-            if(len(temp)>1):chunks.append(temp)
+            if(len(temp)>1 and temp[1]-temp[0]>2):chunks.append([temp[0],temp[1]-1])
             temp = []
-    if(len(temp)>1):chunks.append(temp)
+    if(len(temp)>1 and temp[1]-temp[0]>2):chunks.append([temp[0],temp[1]-1])
     return chunks
 
 def getPeaks(t, data): # returns list of indexes
@@ -52,7 +54,18 @@ def getPeaks(t, data): # returns list of indexes
             res.append(i)
     return res
 
-def getCleanPeaks(t,data,peaks,errorMax=.05):
+def getInterestPoints(t,data):
+    peaks = getPeaks(t,data)
+    _linParts = getLinearParts(t,data)
+    linParts = [i[0] for i in _linParts] + [i[1] for i in _linParts] 
+    res = []
+    for i in peaks + linParts:
+        if i not in res:res.append(i)
+    return res
+            
+
+
+def getCleanInterests(t,data,peaks,errorMax=.05):
     peaks = peaks.copy()
     rm = []
     for i,p in getIterable("Cleaning up maxima/minima",enumerate(peaks)):
@@ -76,13 +89,18 @@ def smooth(t,arr, sigma):
     return gaussian_filter1d(arr, sigma=sigma)
 
 def getSigma(t,y):
+    # len(getLinearParts(t,getSmooth(t,y,1,5),margin=.0001))
+    return 3
+    # sigma = 1.3
     # try:
-    #     return 10/average([abs(v-y[i-1]) for i,v in enumerate(y)])
+    #     sigma = 10/statistics.stdev(y)#average([abs(v-y[i-1]) for i,v in enumerate(y)])
     # except:
-        return 1#1.3
+    #     pass
+
+    # return min(sigma,50)
 
 def getIterations(t,y):
-    return 50#20
+    return 5
     # try:
     #     iterations = round(30/statistics.stdev(y))
     # except:
@@ -128,6 +146,22 @@ def smoothNoiseChunks(t,y,chunks,iterations = None, sigma = None):
     # y = getSmooth(t,y,10,sigma=1)
     return y
 
+def straightenLinearParts(t,y,chunks):
+    y = y.copy()
+    for chunk in chunks:
+        if(chunk[1]-chunk[0]==0):continue
+        if(chunk[1]==len(y)):chunk[1]-=1
+
+        patch = y[chunk[0]:chunk[1]+1]
+        # print(len(y),len(t),chunk[0],chunk[1])
+        slope = (patch[-1]-patch[0])/(t[chunk[1]]-t[chunk[0]])
+        # print(slope)
+        
+        for i,v in enumerate(patch):
+            if(i==0):continue
+            patch[i] = patch[i-1]+slope*(t[chunk[0]+i]-t[chunk[0]+i-1])
+        y[chunk[0]:chunk[1]+1] = patch
+    return y
 
 # peaks should be list of indexes in t and y
 def getTimeline(t,y,peaks):
