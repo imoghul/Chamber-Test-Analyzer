@@ -8,6 +8,7 @@ import scipy
 import os
 from sklearn.neighbors import KNeighborsRegressor
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 progBars = True
 
@@ -19,6 +20,23 @@ def dt(time, data):
     if(len(time)!=len(data)):
         raise Exception("incorrect sizes")
     return np.diff(data)/np.diff(time)
+
+def getLinearParts(time, data,margin = 1e-6):
+    d1 = dt(time,data)
+    d2 = dt(time[1:],d1)
+    chunks = []
+    temp = []
+    for i,v in getIterable("Finding linear parts",enumerate(data)):
+        if(i<=1):continue    
+        if abs(d2[i-2])<=margin:# and (all([abs(v-j)<=sumMargin for j in y[temp[0]:temp[1]+1]]) if len(temp) else True):
+            if(temp==[]):temp = [i,i+1]
+            else:
+                temp[1] = i+1
+        else:
+            if(len(temp)>1):chunks.append(temp)
+            temp = []
+    if(len(temp)>1):chunks.append(temp)
+    return chunks
 
 def getPeaks(t, data): # returns list of indexes
     res = []
@@ -61,20 +79,20 @@ def getSigma(t,y):
     # try:
     #     return 10/average([abs(v-y[i-1]) for i,v in enumerate(y)])
     # except:
-        return 1
+        return 1#1.3
 
 def getIterations(t,y):
-    return 20
-    try:
-        iterations = round(30/statistics.stdev(y))
-    except:
-        iterations = 0
+    return 50#20
+    # try:
+    #     iterations = round(30/statistics.stdev(y))
+    # except:
+    #     iterations = 0
 
-    if(iterations < 5):
-        iterations = 5
-    if(iterations > 100):
-        iterations = 100
-    return iterations
+    # if(iterations < 5):
+    #     iterations = 5
+    # if(iterations > 100):
+    #     iterations = 100
+    # return iterations
 
 def getSmooth(t, y, iterations=None,sigma = None):
     if(iterations == None):
@@ -111,11 +129,11 @@ def smoothNoiseChunks(t,y,chunks,iterations = None, sigma = None):
     return y
 
 
-
+# peaks should be list of indexes in t and y
 def getTimeline(t,y,peaks):
     res = []
-    for i in peaks[:-1]:
-        diff = (y[i+1]-y[i])/(t[i+1]-t[i])
+    for i,v in enumerate(peaks[1:]):
+        diff = (y[v]-y[peaks[i-1]])/(t[v]-t[peaks[i-1]])
         if diff>1e-6:
             res.append("pulling down")
         elif diff<-1e-6:
