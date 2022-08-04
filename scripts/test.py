@@ -57,7 +57,7 @@ def analyze():
 
                 
                 
-                w = plt.subplot(grid[iter, 0:1])#plt.subplot(2,iterations,1)
+                w = plt.subplot(grid[iter, 0:1]) if iter==0 else plt.subplot(grid[iter, 0:1],sharex=w,sharey = w)#plt.subplot(2,iterations,1)
                 w.plot(t, interest["Watt"], "paleturquoise")
                 w.plot(t, origWatts, "turquoise")
                 w.plot(t, watts, "blue")

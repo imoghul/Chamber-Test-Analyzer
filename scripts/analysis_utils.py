@@ -90,27 +90,29 @@ def smooth(t,arr, sigma):
 
 def getSigma(t,y):
     # len(getLinearParts(t,getSmooth(t,y,1,5),margin=.0001))
-    return 3
-    # sigma = 1.3
-    # try:
-    #     sigma = 10/statistics.stdev(y)#average([abs(v-y[i-1]) for i,v in enumerate(y)])
-    # except:
-    #     pass
+    # return 2
+    sigma = 1.3
+    try:
+        sigma = (max(y)-min(y))/10#10/statistics.stdev(y)#average([abs(v-y[i-1]) for i,v in enumerate(y)])
+    except:
+        pass
 
-    # return min(sigma,50)
+    sigma = max(1.3,sigma)
+
+    return min(sigma,50)
 
 def getIterations(t,y):
-    return 5
-    # try:
-    #     iterations = round(30/statistics.stdev(y))
-    # except:
-    #     iterations = 0
+    # return 25
+    try:
+        iterations = round(30/statistics.stdev(y))
+    except:
+        iterations = 0
 
-    # if(iterations < 5):
-    #     iterations = 5
-    # if(iterations > 100):
-    #     iterations = 100
-    # return iterations
+    if(iterations < 5):
+        iterations = 5
+    if(iterations > 100):
+        iterations = 100
+    return iterations
 
 def getSmooth(t, y, iterations=None,sigma = None):
     if(iterations == None):
@@ -125,7 +127,7 @@ def getSmooth(t, y, iterations=None,sigma = None):
 
 
 
-def getNoiseChunks(t,y,margin=10,sumMargin = 5): # returns [[a,b],[c,d],[e,f]...]
+def getNoiseChunks(t,y,margin=2,minLen = 10): # returns [[a,b],[c,d],[e,f]...]
     chunks = []
     temp = []
     diff = dt(t,y)
@@ -135,9 +137,9 @@ def getNoiseChunks(t,y,margin=10,sumMargin = 5): # returns [[a,b],[c,d],[e,f]...
             else:
                 temp[1] = i+1
         else:
-            if(len(temp)>1):chunks.append(temp)
+            if(len(temp)>1 and temp[1]-temp[0]>minLen):chunks.append(temp)
             temp = []
-    if(len(temp)>1):chunks.append(temp)
+    if(len(temp)>1 and temp[1]-temp[0]>minLen):chunks.append(temp)
     return chunks
 def smoothNoiseChunks(t,y,chunks,iterations = None, sigma = None):
     y = y.copy()
