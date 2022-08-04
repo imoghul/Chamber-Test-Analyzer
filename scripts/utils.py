@@ -130,9 +130,9 @@ class Time():
         data = s.split(" ")
         self.pos = data[0]=="+"
         time = data[1].split(":")
-        self.hour = int(time[0])
-        self.minute = int(time[1])
-        self.second = int(time[2])
+        self.hour = float(time[0])
+        self.minute = float(time[1])
+        self.second = float(time[2])
 
 
 

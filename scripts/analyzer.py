@@ -59,7 +59,7 @@ def calc(fileName, dud):
                                 if(header[index] == "Test Time"):
                                     val = Time("+ "+val).toSec()
                             except:
-                                pass
+                                print(val)
                             try:
                                 val = float(val)
                             except:
@@ -101,7 +101,7 @@ def writeDataToFile(writer, dir, fileNames):
         data = calc(fileName, 0)
         # detectedFiles.append(fileName)
         # "P Temp chamber" in data and -999 not in data["P Temp chamber"] and "P pidPTerm" in data and len(data["P pidPTerm"]) != data["P pidPTerm"].count(-999) and "P pidISum" in data and len(data["P pidISum"]) != data["P pidISum"].count(-999):
-        if True:
+        if "Watt" in data:#True:
             write_json(fileName, data, outdir+outputJson)
             c += 1
         # if c >= 100:

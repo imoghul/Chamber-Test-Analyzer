@@ -1,3 +1,4 @@
+print("Importing Libraries")
 import sys
 sys.settrace
 import csv
@@ -20,7 +21,7 @@ from matplotlib.gridspec import GridSpec
 import matplotlib.pyplot as plt
 import numpy as np
 from analysis_utils import *
-
+print("Finished")
 
 def analyze():
     global threads, headers
@@ -50,7 +51,7 @@ def analyze():
                 noiseChunks = getNoiseChunks(t,origWatts)
                 watts = smoothNoiseChunks(t, watts,noiseChunks)
                 linParts = getLinearParts(t,watts)
-                # watts = straightenLinearParts(t,watts,linParts)
+                watts = straightenLinearParts(t,watts,linParts)
                 # watts = smoothNoiseChunks(t,watts,getNoiseChunks(t,watts))
                 wattsPeaksDirty = getInterestPoints(t,watts)
                 wattsPeaks = getCleanInterests(t, watts,wattsPeaksDirty)
@@ -88,7 +89,7 @@ def analyze():
                 wattsPeaksDirty = getInterestPoints(t,watts)
                 wattsPeaks = getCleanInterests(t, watts,wattsPeaksDirty)
                 # p = plt.subplot(grid[1,0:4],sharex = w,sharey = w)#plt.subplot(subplots[iter+iterations],sharex = w)
-                plt.title("peaks")
+                # plt.title("peaks")
                 peaksT = [t[i] for i in wattsPeaksDirty]
                 peaksData = [watts[i]for i in wattsPeaksDirty]
                 # p.plot(peaksT, peaksData,"red")
