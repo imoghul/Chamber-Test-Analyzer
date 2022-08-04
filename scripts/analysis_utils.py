@@ -10,6 +10,8 @@ import scipy
 import os
 from sklearn.neighbors import KNeighborsRegressor
 from tqdm import tqdm
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score
 import matplotlib.pyplot as plt
 
 progBars = True
@@ -155,11 +157,13 @@ def getSmooth(t, y, iterations=None, sigma=None):
     return smoov
 
 
-def getNoiseChunks(t, y, margin=5, minLen=5):  # returns [[a,b],[c,d],[e,f]...]
+def getNoiseChunks(t, y, margin=5, regressionScore = .7, minLen=5):  # returns [[a,b],[c,d],[e,f]...]
     chunks = []
     temp = []
     diff = dt(t, y)
     for i, v in getIterable("Calculating noisy chunks", enumerate(y[:-1])):
+        # if(len(temp)):
+        #     print(getLinRegScore(t[temp[0]:temp[1]+1],y[temp[0]:temp[1]+1]))
         # and (all([abs(v-j)<=sumMargin for j in y[temp[0]:temp[1]+1]]) if len(temp) else True):
         if abs(v-y[i+1]) <= margin:
             if(temp == []):
@@ -218,3 +222,26 @@ def getTimeline(t, y, peaks):
         else:
             res.append("steady state")
     return res
+
+
+def getLinRegScore(t,y):
+    time = []
+    for i,t in enumerate(t):
+        time.append([t])
+    time = np.array(time)
+    data = np.array(y)
+    time = np.hstack((time,time*time))
+    lin_reg = LinearRegression()
+    lin_reg.fit(time, data)
+    return lin_reg.score(time, data)
+
+    
+    # X = []
+    # for i,t in enumerate(t):
+    #     X.append([t])
+    # X = np.array(X)
+    # X = np.hstack((X, X*X))
+    # # print(X)
+    # regressor = LinearRegression().fit(X, y)
+    # return r2_score(regressor.predict(X), y)
+

@@ -42,9 +42,11 @@ def analyze():
             t = interest["Test Time"]
             watts = interest["Watt"]
 
-            iterations = 3
+            iterations = 1
+            showFrom = 1
+            showFrom-=1
             plt.figure(fn)
-            grid = plt.GridSpec(iterations, 4, wspace =0.3, hspace = 0.3)
+            grid = plt.GridSpec(iterations-showFrom, 4, wspace =0.3, hspace = 0.3)
             for iter in getIterable("Iterations",range(iterations)):
                 origWatts = watts.copy()#smooth(t,watts.copy(),sigma = 1)
                 # origWatts = savgol_filter(origWatts, 101, 2)
@@ -56,34 +58,36 @@ def analyze():
                 wattsPeaksDirty = getInterestPoints(t,watts)
                 wattsPeaks = getCleanInterests(t, watts,wattsPeaksDirty)
 
-                
-                
-                w = plt.subplot(grid[iter, 0:1]) if iter==0 else plt.subplot(grid[iter, 0:1],sharex=w,sharey = w)#plt.subplot(2,iterations,1)
-                w.plot(t, interest["Watt"], "paleturquoise")
-                w.plot(t, origWatts, "turquoise")
-                w.plot(t, watts, "blue")
-                for i in noiseChunks:
-                    plt.plot( t[i[0]:i[1]+1] ,origWatts[i[0]:i[1]+1],"black")
-                w.scatter([t[i] for i in wattsPeaksDirty], [watts[i]
-                        for i in wattsPeaksDirty], c="red")
-                w.scatter([t[i] for i in wattsPeaks], [watts[i]
-                        for i in wattsPeaks], c="green")
-                plt.title("watts")#("watts %d"%(iter+1))
+                if(iter>=showFrom):
+                    w = plt.subplot(grid[iter-showFrom, 0:1]) if iter==showFrom else plt.subplot(grid[iter-showFrom, 0:1],sharex=w,sharey = w)#plt.subplot(2,iterations,1)
+                    w.plot(t, interest["Watt"], "paleturquoise")
+                    w.plot(t, origWatts, "turquoise")
+                    w.plot(t, watts, "blue")
+                    for i in noiseChunks:
+                        score = getLinRegScore(t[i[0]:i[1]+1] ,watts[i[0]:i[1]+1])
+                        width = score*10 if score>0 else 1
+                        plt.plot( t[i[0]:i[1]+1] ,origWatts[i[0]:i[1]+1],"black",linewidth = width)
+                    w.scatter([t[i] for i in wattsPeaksDirty], [watts[i]
+                            for i in wattsPeaksDirty], c="red")
+                    w.scatter([t[i] for i in wattsPeaks], [watts[i]
+                            for i in wattsPeaks], c="green")
+                    plt.title("watts %d"%(iter+1))
 
-                e = plt.subplot(grid[iter, 1:3],sharex = w,sharey = w)#plt.subplot(2,iterations,3)
-                e.plot(t, interest["Watt"], "paleturquoise")
-                # e.plot(t,straightenLinearParts(t,watts,linParts),"black")
-                e.plot(t, watts, "blue")
-                for i in linParts:
-                    # print(i)
-                    e.plot( t[i[0]:i[1]+1] ,watts[i[0]:i[1]+1],color="green",linewidth = 2)
-                plt.title("processed watts")
+                    e = plt.subplot(grid[iter-showFrom, 1:3],sharex = w,sharey = w)#plt.subplot(2,iterations,3)
+                    e.plot(t, interest["Watt"], "paleturquoise")
+                    # e.plot(t,straightenLinearParts(t,watts,linParts),"black")
+                    e.plot(t, watts, "blue")
+                    for i in linParts:
+                        # print(i)
+                        
+                        e.plot( t[i[0]:i[1]+1] ,watts[i[0]:i[1]+1],color="green",linewidth = 2)
+                    plt.title("processed watts %d"%(iter+1))
 
-                d = plt.subplot(grid[iter, 3],sharex = w)
-                d2t = dt(t[1:],dt(t,watts))
-                d.plot(t[2:],d2t,"black")
-                d.plot(t[2:],d2t,"o")
-                plt.title("second derivative")
+                    d = plt.subplot(grid[iter-showFrom, 3],sharex = w)
+                    d2t = dt(t[1:],dt(t,watts))
+                    d.plot(t[2:],d2t,"black")
+                    d.plot(t[2:],d2t,"o")
+                    plt.title("second derivative %d"%(iter+1))
                 
                 # for iter in getIterable("Iterations",range(iterations)):
                 wattsPeaksDirty = getInterestPoints(t,watts)
