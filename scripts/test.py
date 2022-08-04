@@ -59,21 +59,22 @@ def analyze():
                 wattsPeaks = getCleanInterests(t, watts,wattsPeaksDirty)
 
                 if(iter>=showFrom):
-                    w = plt.subplot(grid[iter-showFrom, 0:1]) if iter==showFrom else plt.subplot(grid[iter-showFrom, 0:1],sharex=w,sharey = w)#plt.subplot(2,iterations,1)
+                    w = plt.subplot(grid[iter-showFrom, 0:2]) if iter==showFrom else plt.subplot(grid[iter-showFrom, 0:1],sharex=w,sharey = w)#plt.subplot(2,iterations,1)
                     w.plot(t, interest["Watt"], "paleturquoise")
                     w.plot(t, origWatts, "turquoise")
                     w.plot(t, watts, "blue")
                     for i in noiseChunks:
                         score = getLinRegScore(t[i[0]:i[1]+1] ,watts[i[0]:i[1]+1])
-                        width = score*10 if score>0 else 1
-                        plt.plot( t[i[0]:i[1]+1] ,origWatts[i[0]:i[1]+1],"black",linewidth = width)
+                        width = (score-.9)*50 if score>.9 else 1
+                        w.text(t[i[0]],origWatts[i[0]],str(round(score,3)))
+                        w.plot( t[i[0]:i[1]+1] ,origWatts[i[0]:i[1]+1],"black",linewidth = width)
                     w.scatter([t[i] for i in wattsPeaksDirty], [watts[i]
                             for i in wattsPeaksDirty], c="red")
                     w.scatter([t[i] for i in wattsPeaks], [watts[i]
                             for i in wattsPeaks], c="green")
                     plt.title("watts %d"%(iter+1))
 
-                    e = plt.subplot(grid[iter-showFrom, 1:3],sharex = w,sharey = w)#plt.subplot(2,iterations,3)
+                    e = plt.subplot(grid[iter-showFrom, 2:4],sharex = w,sharey = w)#plt.subplot(2,iterations,3)
                     e.plot(t, interest["Watt"], "paleturquoise")
                     # e.plot(t,straightenLinearParts(t,watts,linParts),"black")
                     e.plot(t, watts, "blue")
@@ -83,11 +84,11 @@ def analyze():
                         e.plot( t[i[0]:i[1]+1] ,watts[i[0]:i[1]+1],color="green",linewidth = 2)
                     plt.title("processed watts %d"%(iter+1))
 
-                    d = plt.subplot(grid[iter-showFrom, 3],sharex = w)
-                    d2t = dt(t[1:],dt(t,watts))
-                    d.plot(t[2:],d2t,"black")
-                    d.plot(t[2:],d2t,"o")
-                    plt.title("second derivative %d"%(iter+1))
+                    # d = plt.subplot(grid[iter-showFrom, 3],sharex = w)
+                    # d2t = dt(t[1:],dt(t,watts))
+                    # d.plot(t[2:],d2t,"black")
+                    # d.plot(t[2:],d2t,"o")
+                    # plt.title("second derivative %d"%(iter+1))
                 
                 # for iter in getIterable("Iterations",range(iterations)):
                 wattsPeaksDirty = getInterestPoints(t,watts)

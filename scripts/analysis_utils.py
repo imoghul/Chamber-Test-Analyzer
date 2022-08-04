@@ -225,23 +225,23 @@ def getTimeline(t, y, peaks):
 
 
 def getLinRegScore(t,y):
-    time = []
-    for i,t in enumerate(t):
-        time.append([t])
-    time = np.array(time)
-    data = np.array(y)
-    time = np.hstack((time,time*time))
-    lin_reg = LinearRegression()
-    lin_reg.fit(time, data)
-    return lin_reg.score(time, data)
+    # time = []
+    # for i,t in enumerate(t):
+    #     time.append([t])
+    # time = np.array(time)
+    # data = np.array(y)
+    # time = np.hstack((time,time*time))
+    # lin_reg = LinearRegression()
+    # lin_reg.fit(time, data)
+    # return lin_reg.score(time, data)
 
     
-    # X = []
-    # for i,t in enumerate(t):
-    #     X.append([t])
-    # X = np.array(X)
-    # X = np.hstack((X, X*X))
-    # # print(X)
-    # regressor = LinearRegression().fit(X, y)
-    # return r2_score(regressor.predict(X), y)
+    X = []
+    for i,t in enumerate(t):
+        X.append([t])
+    X = np.array(X)
+    X = np.hstack((X, X*X))
+    # print(X)
+    regressor = LinearRegression().fit(X, y)
+    return r2_score(regressor.predict(X), y)
 
