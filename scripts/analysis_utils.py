@@ -122,7 +122,7 @@ def smooth(t, arr, sigma):
 def getSigma(t, y):
     sigma = 1.3
     try:
-        sigma = 10*(getLinRegScore(t,y)**2)#(max(y)-min(y))/20
+        sigma = (max(y)-min(y))/20 #
     except:
         pass
 
@@ -214,9 +214,9 @@ def getTimeline(t, y, peaks):
     res = []
     for i, v in enumerate(peaks[:-1]):
         diff = (y[peaks[i+1]]-y[v])/(t[peaks[i+1]]-t[v])
-        if diff > 1e-4:
+        if diff > 7.5e-4:
             res.append("pulling down")
-        elif diff < -1e-4:
+        elif diff < -7.5e-4:
             res.append("cooling off")
         else:
             res.append("steady state")
