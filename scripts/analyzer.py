@@ -65,6 +65,7 @@ def analyze():
                     e.plot(t, watts, "blue")
                     for i in linParts:
                         e.plot( t[i[0]:i[1]+1] ,watts[i[0]:i[1]+1],color="green",linewidth = 2)
+                    plt.title("Processed Watts")
 
 
                     timelineData = range(len(watts))#([0] if 0 not in wattsPeaksDirty else [])+wattsPeaksDirty.copy()
@@ -79,7 +80,7 @@ def analyze():
                         elif (timeline[i]=="cooling off"):
                             color = "green"
                         tP.plot(t[v:timelineData[i+1]+1],watts[v:timelineData[i+1]+1],color = color)
-                    plt.title("timeline")
+                    plt.title("Watts Timeline")
                 
 
 

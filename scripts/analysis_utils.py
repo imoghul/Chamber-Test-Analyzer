@@ -13,6 +13,7 @@ from sklearn.neighbors import KNeighborsRegressor
 from tqdm import tqdm
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
+from constants import *
 import matplotlib.pyplot as plt
 
 progBars = True
@@ -41,7 +42,7 @@ def dt(time, data):
         exit()
 
 
-def getLinearParts(time, data, margin=5e-7, regressionScore = .93):  # 5e-7):
+def getLinearParts(time, data, margin=LinearChunksMargin, regressionScore = LinearChunksRegressionScore):  # 5e-7):
     d1 = dt(time, data)
     d2 = dt(time[1:], d1)
     chunks = []
@@ -87,14 +88,14 @@ def getInterestPoints(t, data):
     _linParts = getLinearParts(t, data)#+getLinParts_LinReg(t,data)
     linParts = [i[0] for i in _linParts] + [i[1] for i in _linParts]
     res = []
-    for i in peaks + linParts:
+    for i in getIterable("Calculating Points of Interest",peaks + linParts):
         if i not in res:
             res.append(i)
     res.sort()
     return res
 
 
-def getCleanInterests(t, data, peaks, errorMax=.05):
+def getCleanInterests(t, data, peaks, errorMax=InterestsBounceMax):
     peaks = peaks.copy()
     rm = []
     for i, p in getIterable("Cleaning up maxima/minima", enumerate(peaks)):
@@ -120,32 +121,32 @@ def smooth(t, arr, sigma):
 
 
 def getSigma(t, y):
-    sigma = 1.3
+    sigma = SigmaHardMin
     try:
-        sigma = (max(y)-min(y))/20 #
+        sigma = (max(y)-min(y))/SigmaRangeDivisor
     except:
         pass
 
-    sigma = max(1.3, sigma)
+    sigma = max(SigmaHardMin, sigma)
 
-    return min(sigma, 20)#50)
+    return min(sigma, SigmaHardMax)
 
 
 def getIterations(t, y):
     # return 25
     try:
-        iterations = round(50/statistics.stdev(y))
+        iterations = round(IterationsCalculationConstant/statistics.stdev(y))
     except:
         iterations = 0
 
-    if(iterations < 5):
-        iterations = 5
-    if(iterations > 100):
-        iterations = 100
+    if(iterations < IterationsHardMin):
+        iterations = IterationsHardMin
+    if(iterations > IterationsHardMax):
+        iterations = IterationsHardMax
     return iterations
 
 
-def getSmooth(t, y, iterations=None, sigma=None, maxError = 3):
+def getSmooth(t, y, iterations=None, sigma=None, maxError = SmoothnessMaxError):
     if(iterations == None):
         iterations = getIterations(t, y)
     if(sigma == None):
@@ -155,7 +156,7 @@ def getSmooth(t, y, iterations=None, sigma=None, maxError = 3):
     for i in getIterable("Smoothing", range(iterations-1)):
         smoov = smooth(t, smoov, sigma=sigma)
     
-    while(max([abs(v-y[i]) for i,v in enumerate(smoov)])>maxError and sigma>0):
+    while(max([abs(v-y[i]) for i,v in enumerate(smoov)])>maxError and sigma>SigmaHardMin):
         sigma-=.1
         smoov = smooth(t, y, sigma=sigma)
         for i in getIterable("Smoothing", range(iterations-1)):
@@ -164,7 +165,7 @@ def getSmooth(t, y, iterations=None, sigma=None, maxError = 3):
     return smoov
 
 
-def getNoiseChunks(t, y, margin=5, regressionScore = .7, minLen=5):  # returns [[a,b],[c,d],[e,f]...]
+def getNoiseChunks(t, y, margin=NoiseChunksMargin, minLen=NoiseChunksMinLen):  # returns [[a,b],[c,d],[e,f]...]
     chunks = []
     temp = []
     diff = dt(t, y)
@@ -220,11 +221,11 @@ def straightenLinearParts(t, y, chunks):
 
 def getTimeline(t, y, peaks):
     res = []
-    for i, v in enumerate(peaks[:-1]):
+    for i, v in getIterable("Generating Timeline",enumerate(peaks[:-1])):
         diff = (y[peaks[i+1]]-y[v])/(t[peaks[i+1]]-t[v])
-        if diff > 7.5e-4:
+        if diff > PulldownRate:
             res.append("pulling down")
-        elif diff < -7.5e-4:
+        elif diff < CoolingRate:
             res.append("cooling off")
         else:
             res.append("steady state")
@@ -253,7 +254,7 @@ def getLinRegScore(t,y):
 
 
 
-def getLinParts_LinReg(t,y,regScore = .99):
+def getLinParts_LinReg(t,y,regScore = LinearChunksLinRegRegressionScore):
     chunks = []
     start = 0
     while start<len(y):
@@ -264,7 +265,7 @@ def getLinParts_LinReg(t,y,regScore = .99):
                 end+=1
             else:break
         chunk = start,min(end,len(y)-1)
-        if(abs(chunk[1]-chunk[0])>3):chunks.append(chunk)
+        if(abs(chunk[1]-chunk[0])>1):chunks.append(chunk)
         start = end
     print(chunks)
     return chunks

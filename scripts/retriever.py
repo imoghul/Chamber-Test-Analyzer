@@ -105,32 +105,13 @@ def writeDataToFile(writer, dir, fileNames):
             if "Watt" in data:#True:
                 write_json(fileName, data, outdir)
                 c += 1
-            # if c >= 100:
-            #     return
         threads.append(threading.Thread(target=run,args=(fileName,outdir,c)))
     
 
 
 def writeSummaryToFile(writer):
     global threads, headers
-    runThreads(threads,10,"Running Threads")
-    # data = get_json(outdir+outputJson)
-    # bar = tqdm(data)
-    # for fn in bar:
-    #     interest = data[fn]
-
-    #     writer.writerow(["FileName", fn])
-    #     writer.writerow(["Time:"]+[str(i) for i in interest["Test Time"]])
-    #     writer.writerow(["Ambients"]+interest["Ambients"])
-    #     writer.writerow(["Watts:"]+interest["Watt"])
-    #     writer.writerow(["PHPs:"]+interest["PHPs"])
-    #     if("P Temp chamber" in interest):
-    #         writer.writerow(["P Temp chamber"]+interest["P Temp chamber"])
-    #     if("P pidPTerm" in interest):
-    #         writer.writerow(["P pidPTerm"]+interest["P pidPTerm"])
-    #     if("P pidISum" in interest):
-    #         writer.writerow(["P pidISum"]+interest["P pidISum"])
-    #     writer.writerow([""])
+    runThreads(threads,1,"Running Threads")
 
 
 def transfer(odir, log):

@@ -1,0 +1,15 @@
+LinearChunksMargin = 5e-7
+LinearChunksRegressionScore = .93
+InterestsBounceMax = .5
+SigmaHardMin = 1.3
+SigmaHardMax = 20#50
+SigmaRangeDivisor = 20
+IterationsHardMin = 5
+IterationsHardMax = 100
+IterationsCalculationConstant = 50
+SmoothnessMaxError = .5
+NoiseChunksMargin = 5
+NoiseChunksMinLen = 5
+PulldownRate = 7.5e-4
+CoolingRate = -7.5e-4
+LinearChunksLinRegRegressionScore = .99
