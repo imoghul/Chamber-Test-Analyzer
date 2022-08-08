@@ -84,7 +84,7 @@ def getPeaks(t, data):  # returns list of indexes
 
 def getInterestPoints(t, data):
     peaks = getPeaks(t, data)
-    _linParts = getLinParts_LinReg(t,data)+getLinearParts(t, data)
+    _linParts = getLinearParts(t, data)#+getLinParts_LinReg(t,data)
     linParts = [i[0] for i in _linParts] + [i[1] for i in _linParts]
     res = []
     for i in peaks + linParts:
@@ -122,13 +122,13 @@ def smooth(t, arr, sigma):
 def getSigma(t, y):
     sigma = 1.3
     try:
-        sigma = (max(y)-min(y))/20
+        sigma = (max(y)-min(y))/20#20
     except:
         pass
 
     sigma = max(1.3, sigma)
 
-    return min(sigma, 150)#50)
+    return min(sigma, 50)#50)
 
 
 def getIterations(t, y):
@@ -214,9 +214,9 @@ def getTimeline(t, y, peaks):
     res = []
     for i, v in enumerate(peaks[:-1]):
         diff = (y[peaks[i+1]]-y[v])/(t[peaks[i+1]]-t[v])
-        if diff > 1e-6:
+        if diff > 1e-3:
             res.append("pulling down")
-        elif diff < -1e-6:
+        elif diff < -1e-3:
             res.append("cooling off")
         else:
             res.append("steady state")
@@ -245,7 +245,18 @@ def getLinRegScore(t,y):
 
 
 
-def getLinParts_LinReg(t,y,regScore = .93):
+def getLinParts_LinReg(t,y,regScore = .99):
     chunks = []
-    
+    start = 0
+    while start<len(y):
+        end = start+1
+        while end<len(y):
+            # print(end)
+            if(getLinRegScore(t[start:end+1],y[start:end+1])>=regScore):
+                end+=1
+            else:break
+        chunk = start,min(end,len(y)-1)
+        if(abs(chunk[1]-chunk[0])>3):chunks.append(chunk)
+        start = end
+    print(chunks)
     return chunks

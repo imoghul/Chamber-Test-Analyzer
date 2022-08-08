@@ -52,7 +52,7 @@ def analyze():
                 # origWatts = savgol_filter(origWatts, 101, 2)
                 noiseChunks = getNoiseChunks(t,origWatts)
                 watts = smoothNoiseChunks(t, watts,noiseChunks)
-                linParts = getLinearParts(t,origWatts)
+                linParts = getLinearParts(t,origWatts)#getLinParts_LinReg(t,origWatts)
                 watts = straightenLinearParts(t,watts,linParts)
                 # watts = smoothNoiseChunks(t,watts,getNoiseChunks(t,watts))
                 wattsPeaksDirty = getInterestPoints(t,watts)
