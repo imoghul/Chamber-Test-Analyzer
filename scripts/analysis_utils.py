@@ -145,14 +145,22 @@ def getIterations(t, y):
     return iterations
 
 
-def getSmooth(t, y, iterations=None, sigma=None):
+def getSmooth(t, y, iterations=None, sigma=None, maxError = 3):
     if(iterations == None):
         iterations = getIterations(t, y)
     if(sigma == None):
         sigma = getSigma(t, y)
+    
     smoov = smooth(t, y, sigma=sigma)
     for i in getIterable("Smoothing", range(iterations-1)):
         smoov = smooth(t, smoov, sigma=sigma)
+    
+    while(max([abs(v-y[i]) for i,v in enumerate(smoov)])>maxError and sigma>0):
+        sigma-=.2
+        smoov = smooth(t, y, sigma=sigma)
+        for i in getIterable("Smoothing", range(iterations-1)):
+            smoov = smooth(t, smoov, sigma=sigma)
+        
     return smoov
 
 
