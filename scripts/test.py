@@ -42,7 +42,7 @@ def analyze():
             t = interest["Test Time"]
             watts = interest["Watt"]
 
-            iterations = 3
+            iterations = 2
             showFrom = 1
             showFrom-=1
             plt.figure(fn)
@@ -65,7 +65,7 @@ def analyze():
                     w.plot(t, watts, "blue")
                     for i in noiseChunks:
                         score = getLinRegScore(t[i[0]:i[1]+1] ,origWatts[i[0]:i[1]+1])
-                        width = (score-.9)*50 if score>.9 else 1
+                        width = 2#(score-.9)*50 if score>.9 else 1
                         w.text(t[i[0]],origWatts[i[0]],str(round(score,3)))
                         w.plot( t[i[0]:i[1]+1] ,origWatts[i[0]:i[1]+1],"black",linewidth = width)
                     w.scatter([t[i] for i in wattsPeaksDirty], [watts[i]
