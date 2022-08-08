@@ -2,6 +2,7 @@ import enum
 from linecache import getline
 from pydoc import plainpager
 import threading
+from xml.etree.ElementInclude import include
 import numpy as np
 import statistics
 from utils import *
@@ -40,7 +41,7 @@ def dt(time, data):
         exit()
 
 
-def getLinearParts(time, data, margin=5e-7):  # 5e-7):
+def getLinearParts(time, data, margin=5e-7, regressionScore = .93):  # 5e-7):
     d1 = dt(time, data)
     d2 = dt(time[1:], d1)
     chunks = []
@@ -48,8 +49,8 @@ def getLinearParts(time, data, margin=5e-7):  # 5e-7):
     for i, v in getIterable("Finding linear parts", enumerate(data)):
         if(i < 2):
             continue
-        # and (all([abs(v-j)<=sumMargin for j in y[temp[0]:temp[1]+1]]) if len(temp) else True):
         if abs(d2[i-2]) <= margin:
+        # if (getLinRegScore(time[temp[0]:temp[1]+1],data[temp[0]:temp[1]+1])>regressionScore if len(temp) else True):
             if(temp == []):
                 temp = [i, i+1]
             else:
@@ -83,12 +84,13 @@ def getPeaks(t, data):  # returns list of indexes
 
 def getInterestPoints(t, data):
     peaks = getPeaks(t, data)
-    _linParts = getLinearParts(t, data)
+    _linParts = getLinParts_LinReg(t,data)+getLinearParts(t, data)
     linParts = [i[0] for i in _linParts] + [i[1] for i in _linParts]
     res = []
     for i in peaks + linParts:
         if i not in res:
             res.append(i)
+    res.sort()
     return res
 
 
@@ -118,18 +120,15 @@ def smooth(t, arr, sigma):
 
 
 def getSigma(t, y):
-    # len(getLinearParts(t,getSmooth(t,y,1,5),margin=.0001))
-    # return 2
     sigma = 1.3
     try:
-        # 10/statistics.stdev(y)#average([abs(v-y[i-1]) for i,v in enumerate(y)])
         sigma = (max(y)-min(y))/20
     except:
         pass
 
     sigma = max(1.3, sigma)
 
-    return min(sigma, 50)
+    return min(sigma, 150)#50)
 
 
 def getIterations(t, y):
@@ -213,8 +212,8 @@ def straightenLinearParts(t, y, chunks):
 
 def getTimeline(t, y, peaks):
     res = []
-    for i, v in enumerate(peaks[1:]):
-        diff = (y[v]-y[peaks[i-1]])/(t[v]-t[peaks[i-1]])
+    for i, v in enumerate(peaks[:-1]):
+        diff = (y[peaks[i+1]]-y[v])/(t[peaks[i+1]]-t[v])
         if diff > 1e-6:
             res.append("pulling down")
         elif diff < -1e-6:
@@ -230,7 +229,7 @@ def getLinRegScore(t,y):
     #     time.append([t])
     # time = np.array(time)
     # data = np.array(y)
-    # time = np.hstack((time,time*time))
+    # # time = np.hstack((time,time*time))
     # lin_reg = LinearRegression()
     # lin_reg.fit(time, data)
     # return lin_reg.score(time, data)
@@ -240,8 +239,13 @@ def getLinRegScore(t,y):
     for i,t in enumerate(t):
         X.append([t])
     X = np.array(X)
-    X = np.hstack((X, X*X))
-    # print(X)
+    # X = np.hstack((X, X*X))
     regressor = LinearRegression().fit(X, y)
     return r2_score(regressor.predict(X), y)
 
+
+
+def getLinParts_LinReg(t,y,regScore = .93):
+    chunks = []
+    
+    return chunks

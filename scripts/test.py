@@ -42,7 +42,7 @@ def analyze():
             t = interest["Test Time"]
             watts = interest["Watt"]
 
-            iterations = 1
+            iterations = 3
             showFrom = 1
             showFrom-=1
             plt.figure(fn)
@@ -52,19 +52,19 @@ def analyze():
                 # origWatts = savgol_filter(origWatts, 101, 2)
                 noiseChunks = getNoiseChunks(t,origWatts)
                 watts = smoothNoiseChunks(t, watts,noiseChunks)
-                linParts = getLinearParts(t,watts)
+                linParts = getLinearParts(t,origWatts)
                 watts = straightenLinearParts(t,watts,linParts)
                 # watts = smoothNoiseChunks(t,watts,getNoiseChunks(t,watts))
                 wattsPeaksDirty = getInterestPoints(t,watts)
                 wattsPeaks = getCleanInterests(t, watts,wattsPeaksDirty)
 
                 if(iter>=showFrom):
-                    w = plt.subplot(grid[iter-showFrom, 0:2]) if iter==showFrom else plt.subplot(grid[iter-showFrom, 0:1],sharex=w,sharey = w)#plt.subplot(2,iterations,1)
+                    w = plt.subplot(grid[iter-showFrom, 0:1]) if iter==showFrom else plt.subplot(grid[iter-showFrom, 0:1],sharex=w,sharey = w)#plt.subplot(2,iterations,1)
                     w.plot(t, interest["Watt"], "paleturquoise")
                     w.plot(t, origWatts, "turquoise")
                     w.plot(t, watts, "blue")
                     for i in noiseChunks:
-                        score = getLinRegScore(t[i[0]:i[1]+1] ,watts[i[0]:i[1]+1])
+                        score = getLinRegScore(t[i[0]:i[1]+1] ,origWatts[i[0]:i[1]+1])
                         width = (score-.9)*50 if score>.9 else 1
                         w.text(t[i[0]],origWatts[i[0]],str(round(score,3)))
                         w.plot( t[i[0]:i[1]+1] ,origWatts[i[0]:i[1]+1],"black",linewidth = width)
@@ -74,7 +74,7 @@ def analyze():
                             for i in wattsPeaks], c="green")
                     plt.title("watts %d"%(iter+1))
 
-                    e = plt.subplot(grid[iter-showFrom, 2:4],sharex = w,sharey = w)#plt.subplot(2,iterations,3)
+                    e = plt.subplot(grid[iter-showFrom, 1:3],sharex = w,sharey = w)#plt.subplot(2,iterations,3)
                     e.plot(t, interest["Watt"], "paleturquoise")
                     # e.plot(t,straightenLinearParts(t,watts,linParts),"black")
                     e.plot(t, watts, "blue")
@@ -91,8 +91,8 @@ def analyze():
                     # plt.title("second derivative %d"%(iter+1))
                 
                 # for iter in getIterable("Iterations",range(iterations)):
-                wattsPeaksDirty = getInterestPoints(t,watts)
-                wattsPeaks = getCleanInterests(t, watts,wattsPeaksDirty)
+                # wattsPeaksDirty = getInterestPoints(t,watts)
+                # wattsPeaks = getCleanInterests(t, watts,wattsPeaksDirty)
                 # p = plt.subplot(grid[1,0:4],sharex = w,sharey = w)#plt.subplot(subplots[iter+iterations],sharex = w)
                 # plt.title("peaks")
                 peaksT = [t[i] for i in wattsPeaksDirty]
@@ -107,17 +107,30 @@ def analyze():
                 # p.scatter([peaksT[i] for i in peaksPeaks], [peaksData[i]
                 #         for i in peaksPeaks], c="green")
 
+                timelineData = ([0] if 0 not in wattsPeaksDirty else [])+wattsPeaksDirty.copy()
+                tP = plt.subplot(grid[iter-showFrom, 3],sharex = w,sharey = w)
+                timeline = getTimeline(t,watts,timelineData)
+                for i,v in enumerate(timelineData[:-1]):
+                    # if(i==0):continue
+                    color = "black"
+                    if(timeline[i]=="pulling down"):
+                        color = "red"
+                    elif (timeline[i]=="cooling off"):
+                        color = "green"
+                    tP.plot(t[v:timelineData[i+1]+1],watts[v:timelineData[i+1]+1],color = color)
+                plt.title("timeline")
+
+
             writer.writerow(["Time (s): "]+t)
             writer.writerow(["Original Watts: "] + [str(i) for i in interest["Watt"]])
             writer.writerow(["Refined Watts: "]+[str(i) for i in watts])
             writer.writerow(["Watts Peaks Refined:"]+[watts[i] if i in wattsPeaks else '' for i, _ in enumerate(watts)])
             writer.writerow(["Watts Peaks Unrefined:"]+[watts[i] if i in wattsPeaksDirty else '' for i, _ in enumerate(watts)])
             writer.writerow(["Peaks Peaks Dirty:"]+[watts[i] if i in peaksPeaksDirty else '' for i, _ in enumerate(watts)])
-            outTimeline = ["Timeline:",""]
-            timeline = getTimeline(t,watts,([0] if 0 not in wattsPeaksDirty else [])+wattsPeaksDirty)
+            outTimeline = ["Timeline:"]
             for i,v in enumerate(timeline):
-                for j in range( ( t.index(peaksT[i]) - ((t.index(peaksT[i-1])) if i!=0 else 0) ) -1 ):outTimeline.append("")
                 outTimeline.append(v) # v if timeline[i-1] != v else ""
+                for j in range((( (timelineData[i+1]-timelineData[i])) ) -1 ):outTimeline.append("")
             writer.writerow(outTimeline)
             writer.writerow(["-"*len(t)])
             plt.show()
