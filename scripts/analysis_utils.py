@@ -134,7 +134,7 @@ def getSigma(t, y):
 def getIterations(t, y):
     # return 25
     try:
-        iterations = round(30/statistics.stdev(y))
+        iterations = round(50/statistics.stdev(y))
     except:
         iterations = 0
 
@@ -156,7 +156,7 @@ def getSmooth(t, y, iterations=None, sigma=None, maxError = 3):
         smoov = smooth(t, smoov, sigma=sigma)
     
     while(max([abs(v-y[i]) for i,v in enumerate(smoov)])>maxError and sigma>0):
-        sigma-=.2
+        sigma-=.1
         smoov = smooth(t, y, sigma=sigma)
         for i in getIterable("Smoothing", range(iterations-1)):
             smoov = smooth(t, smoov, sigma=sigma)
