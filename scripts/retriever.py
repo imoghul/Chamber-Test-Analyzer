@@ -99,7 +99,7 @@ def writeDataToFile(writer, dir, fileNames):
     for fileName in bar:
         
         def run(fileName,outdir,c):
-            # if cleanFileName(fileName) in detectedFiles:continue 
+            if cleanFileName(fileName) in detectedFiles:return#continue 
 
             data = calc(fileName, 0)
             if "Watt" in data:#True:
@@ -140,22 +140,22 @@ def write_json(fn,new_data,outdir=outdir):
     except FileExistsError:
         detectedFiles.append(key)
 
-    # try:
-    #     with open(outdir+outputJson, 'r+') as file:
-    #         # First we load existing data into a dict.
-    #         file_data = json.load(file)
-    #         # Join new_data with file_data inside emp_details
-    #         detectedFiles = list(file_data.keys())
-    #         # if(key not in file_data):file_data[key] = new_data
-    #         # else:file_data[key].append(new_data)
-    #         file_data['File Names'].append(key)
+    try:
+        with open(outdir+outputJson, 'r+') as file:
+            # First we load existing data into a dict.
+            file_data = json.load(file)
+            # Join new_data with file_data inside emp_details
+            detectedFiles = list(file_data.keys())
+            # if(key not in file_data):file_data[key] = new_data
+            # else:file_data[key].append(new_data)
+            file_data['File Names'].append(key)
 
-    #         # Sets file's current position at offset.
-    #         file.seek(0)
-    #         # convert back to json.
-    #         json.dump(file_data, file, indent=4)
-    # except PermissionError:
-    #     write_json(fn, new_data, outdir)
+            # Sets file's current position at offset.
+            file.seek(0)
+            # convert back to json.
+            json.dump(file_data, file, indent=4)
+    except PermissionError:
+        write_json(fn, new_data, outdir)
 
 
 def get_json(filename=outdir+outputJson):

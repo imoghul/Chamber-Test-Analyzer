@@ -26,7 +26,8 @@ print("Finished")
 def analyze():
     global threads, headers
     print("Getting data")
-    dataFiles = glob.glob("C:/Users/Ibrahim.Moghul/Desktop/Data Analysis Scripts/OUTPUT/Chambers/data/*.json")
+    dataFiles = glob.glob("L:/Engineering_Services/View/PerformanceTest/rts summary/data/*.json")
+    # print(dataFiles)
     print("Finished")
     # print(data[list(
     # data.keys())[0]])
@@ -86,12 +87,13 @@ def analyze():
 
             writer.writerow(["Time (s): "]+t)
             writer.writerow(["Original Watts: "] + [str(i) for i in interest["Watt"]])
+            writer.writerow(["Ambient Temperature: "] + [str(i) for i in interest["Ambients"]])
             writer.writerow(["Refined Watts: "]+[str(i) for i in watts])
             writer.writerow(["Watts Peaks Refined:"]+[watts[i] if i in wattsPeaks else '' for i, _ in enumerate(watts)])
             writer.writerow(["Watts Peaks Unrefined:"]+[watts[i] if i in wattsPeaksDirty else '' for i, _ in enumerate(watts)])
             outTimeline = ["Timeline:"]
             for i,v in enumerate(timeline):
-                outTimeline.append(v) # v if timeline[i-1] != v else ""
+                outTimeline.append(v if timeline[i-1] != v or i==0 else "")
                 for j in range((( (timelineData[i+1]-timelineData[i])) ) -1 ):outTimeline.append("")
             writer.writerow(outTimeline)
             writer.writerow(["-"*len(t)])

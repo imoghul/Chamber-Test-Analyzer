@@ -189,7 +189,7 @@ def getNoiseChunks(t, y, margin=NoiseChunksMargin, minLen=NoiseChunksMinLen):  #
 
 def smoothNoiseChunks(t, y, chunks, iterations=None, sigma=None):
     y = y.copy()
-    for chunk in chunks:
+    for chunk in getIterable("Smoothing Chunks",chunks):
         y[chunk[0]:chunk[1]+1] = getSmooth(t[chunk[0]:chunk[1]+1],
                                            y[chunk[0]:chunk[1]+1], iterations=iterations, sigma=sigma)
     # y = getSmooth(t,y,10,sigma=1)
