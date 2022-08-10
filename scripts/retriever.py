@@ -15,6 +15,7 @@ import re
 from tqdm import tqdm
 import dateutil.parser
 import logging
+from slugify import slugify
 # import matplotlib.pyplot as plt
 # import numpy as np
 
@@ -99,7 +100,7 @@ def writeDataToFile(writer, dir, fileNames):
     for fileName in bar:
         
         def run(fileName,outdir,c):
-            if cleanFileName(fileName) in detectedFiles:return#continue 
+            if cleanFileName(fileName) in detectedFiles:return 
 
             data = calc(fileName, 0)
             if "Watt" in data:#True:
@@ -129,14 +130,17 @@ def getOutFileName():
 def write_json(fn,new_data,outdir=outdir):
     global detectedFiles
     key = cleanFileName(fn)
-
+    # print(outdir+"data/"+key+".json")
     try:
-        with open(outdir+"data/"+key+".json", 'r+') as file:
+        with open(outdir+"data/"+key+".json", 'w') as file:
             json.dump(new_data,file,indent=4)
     except FileNotFoundError:
+        
         f = open(outdir+"data/"+key+".json", "x")
         f.close()
-        write_json(fn, new_data, outdir)
+        with open(outdir+"data/"+key+".json", 'w') as file:
+            json.dump(new_data,file,indent=4)
+        # write_json(fn, new_data, outdir)
     except FileExistsError:
         detectedFiles.append(key)
 
@@ -167,10 +171,5 @@ def get_json(filename=outdir+outputJson):
 
 
 def cleanFileName(fn):
-    key = ""+fn
-    key = key.replace("L:","")
-    key=key.replace("/","_")
-    key = key.replace("\\","_")
-    key = key.replace(".csv","")
-    key = key.replace(" ","_")
-    return key
+    key = ""+fn.replace(".json","")
+    return slugify(key)+".json"
