@@ -99,20 +99,21 @@ def writeDataToFile(writer, dir, fileNames):
     
     for fileName in bar:
         
-        def run(fileName,outdir,c):
-            if cleanFileName(fileName) in detectedFiles:return 
+        # def run(fileName,outdir,c):
+            if cleanFileName(fileName) in detectedFiles:continue#return 
 
             data = calc(fileName, 0)
             if "Watt" in data:#True:
-                write_json(fileName, data, outdir)
+                try:write_json(fileName, data, outdir)
+                except:pass
                 c += 1
-        threads.append(threading.Thread(target=run,args=(fileName,outdir,c)))
+        # threads.append(threading.Thread(target=run,args=(fileName,outdir,c)))
     
 
 
 def writeSummaryToFile(writer):
     global threads, headers
-    runThreads(threads,1,"Running Threads")
+    # runThreads(threads,1,"Running Threads")
 
 
 def transfer(odir, log):

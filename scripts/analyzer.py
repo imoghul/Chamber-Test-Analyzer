@@ -24,9 +24,6 @@ from analysis_utils import *
 print("Finished")
 
 def analyze(fn,writer):
-    global threads, headers
-    
-        
     interest = get_json(fn)#data[fn]
 
     t = interest["Test Time"]
